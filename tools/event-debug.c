@@ -194,6 +194,14 @@ print_device_notify(struct libinput_event *ev)
 			printf("-clickfinger");
 	}
 
+	if (libinput_device_config_dwt_is_available(dev)) {
+		if (libinput_device_config_dwt_get_enabled(dev) ==
+		    LIBINPUT_CONFIG_DWT_ENABLED)
+			printf(" dwt-on");
+		else
+			printf(" dwt-off)");
+	}
+
 	printf("\n");
 
 }
