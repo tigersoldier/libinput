@@ -322,6 +322,9 @@ struct tp_dispatch {
 	} sendevents;
 
 	struct {
+		struct libinput_device_config_dwt config;
+		bool dwt_enabled;
+
 		bool keyboard_active;
 		struct libinput_event_listener keyboard_listener;
 		struct libinput_timer keyboard_timer;

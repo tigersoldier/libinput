@@ -528,7 +528,8 @@ tp_palm_tap_is_palm(struct tp_dispatch *tp, struct tp_touch *t)
 static int
 tp_palm_detect_dwt(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
 {
-	if (tp->dwt.keyboard_active &&
+	if (tp->dwt.dwt_enabled &&
+	    tp->dwt.keyboard_active &&
 	    t->state == TOUCH_BEGIN) {
 		t->palm.state = PALM_TYPING;
 		t->palm.first = t->point;
@@ -1127,6 +1128,9 @@ tp_keyboard_event(uint64_t time, struct libinput_event *event, void *data)
 	struct libinput_event_keyboard *kbdev;
 	unsigned int timeout;
 
+	if (!tp->dwt.dwt_enabled)
+		return;
+
 	if (event->type != LIBINPUT_EVENT_KEYBOARD_KEY)
 		return;
 
@@ -1158,26 +1162,35 @@ tp_keyboard_event(uint64_t time, struct libinput_event *event, void *data)
 }
 
 static bool
+tp_dwt_device_is_blacklisted(struct evdev_device *device)
+{
+	unsigned int bus = libevdev_get_id_bustype(device->evdev);
+
+	/* evemu will set the right bus type */
+	if (bus == BUS_BLUETOOTH || bus == BUS_VIRTUAL)
+		return true;
+
+	/* Wacom makes touchpads, but not internal ones */
+	if (libevdev_get_id_vendor(device->evdev) == VENDOR_ID_WACOM)
+		return true;
+
+	return false;
+}
+
+static bool
 tp_want_dwt(struct evdev_device *touchpad,
 	    struct evdev_device *keyboard)
 {
 	unsigned int bus_tp = libevdev_get_id_bustype(touchpad->evdev),
 		     bus_kbd = libevdev_get_id_bustype(keyboard->evdev);
 
-	if (bus_tp == BUS_BLUETOOTH || bus_kbd == BUS_BLUETOOTH)
-		return false;
-
-	/* evemu will set the right bus type */
-	if (bus_tp == BUS_VIRTUAL || bus_kbd == BUS_VIRTUAL)
+	if (tp_dwt_device_is_blacklisted(touchpad) ||
+	    tp_dwt_device_is_blacklisted(keyboard))
 		return false;
 
 	/* If the touchpad is on serio, the keyboard is too, so ignore any
 	   other devices */
 	if (bus_tp == BUS_I8042 && bus_kbd != bus_tp)
-		return false;
-
-	/* Wacom makes touchpads, but not internal ones */
-	if (libevdev_get_id_vendor(touchpad->evdev) == VENDOR_ID_WACOM)
 		return false;
 
 	/* everything else we don't really know, so we have to assume
@@ -1500,6 +1513,77 @@ tp_init_scroll(struct tp_dispatch *tp, struct evdev_device *device)
 }
 
 static int
+tp_dwt_config_is_available(struct libinput_device *device)
+{
+	return 1;
+}
+
+static enum libinput_config_status
+tp_dwt_config_set(struct libinput_device *device,
+	   enum libinput_config_dwt_state enable)
+{
+	struct evdev_device *evdev = (struct evdev_device*)device;
+	struct tp_dispatch *tp = (struct tp_dispatch*)evdev->dispatch;
+
+	switch(enable) {
+	case LIBINPUT_CONFIG_DWT_ENABLED:
+	case LIBINPUT_CONFIG_DWT_DISABLED:
+		break;
+	default:
+		return LIBINPUT_CONFIG_STATUS_INVALID;
+	}
+
+	tp->dwt.dwt_enabled = (enable == LIBINPUT_CONFIG_DWT_ENABLED);
+
+	return LIBINPUT_CONFIG_STATUS_SUCCESS;
+}
+
+static enum libinput_config_dwt_state
+tp_dwt_config_get(struct libinput_device *device)
+{
+	struct evdev_device *evdev = (struct evdev_device*)device;
+	struct tp_dispatch *tp = (struct tp_dispatch*)evdev->dispatch;
+
+	return tp->dwt.dwt_enabled ?
+		LIBINPUT_CONFIG_DWT_ENABLED :
+		LIBINPUT_CONFIG_DWT_DISABLED;
+}
+
+static bool
+tp_dwt_default_enabled(struct tp_dispatch *tp)
+{
+	return true;
+}
+
+static enum libinput_config_dwt_state
+tp_dwt_config_get_default(struct libinput_device *device)
+{
+	struct evdev_device *evdev = (struct evdev_device*)device;
+	struct tp_dispatch *tp = (struct tp_dispatch*)evdev->dispatch;
+
+	return tp_dwt_default_enabled(tp) ?
+		LIBINPUT_CONFIG_DWT_ENABLED :
+		LIBINPUT_CONFIG_DWT_DISABLED;
+}
+
+static int
+tp_init_dwt(struct tp_dispatch *tp,
+	    struct evdev_device *device)
+{
+	if (tp_dwt_device_is_blacklisted(device))
+		return 0;
+
+	tp->dwt.config.is_available = tp_dwt_config_is_available;
+	tp->dwt.config.set_enabled = tp_dwt_config_set;
+	tp->dwt.config.get_enabled = tp_dwt_config_get;
+	tp->dwt.config.get_default_enabled = tp_dwt_config_get_default;
+	tp->dwt.dwt_enabled = tp_dwt_default_enabled(tp);
+	device->base.config.dwt = &tp->dwt.config;
+
+	return 0;
+}
+
+static int
 tp_init_palmdetect(struct tp_dispatch *tp,
 		   struct evdev_device *device)
 {
@@ -1672,6 +1756,9 @@ tp_init(struct tp_dispatch *tp,
 		return -1;
 
 	if (tp_init_buttons(tp, device) != 0)
+		return -1;
+
+	if (tp_init_dwt(tp, device) != 0)
 		return -1;
 
 	if (tp_init_palmdetect(tp, device) != 0)
