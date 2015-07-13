@@ -2098,6 +2098,31 @@ START_TEST(touchpad_edge_scroll_clickfinger_click_stops_scroll)
 }
 END_TEST
 
+START_TEST(touchpad_edge_scroll_into_area)
+{
+	struct litest_device *dev = litest_current_device();
+	struct libinput *li = dev->libinput;
+
+	enable_edge_scroll(dev);
+	litest_drain_events(li);
+
+	/* move into area, move vertically, move back to edge */
+
+	litest_touch_down(dev, 0, 99, 20);
+	litest_touch_move_to(dev, 0, 99, 20, 99, 50, 10, 2);
+	litest_touch_move_to(dev, 0, 99, 50, 20, 50, 10, 2);
+	litest_assert_only_typed_events(li,
+					LIBINPUT_EVENT_POINTER_AXIS);
+	litest_touch_move_to(dev, 0, 20, 50, 20, 20, 10, 2);
+	litest_touch_move_to(dev, 0, 20, 20, 99, 20, 10, 2);
+	litest_assert_empty_queue(li);
+
+	litest_touch_move_to(dev, 0, 99, 20, 99, 50, 10, 2);
+	litest_assert_only_typed_events(li,
+					LIBINPUT_EVENT_POINTER_AXIS);
+}
+END_TEST
+
 static int
 touchpad_has_palm_detect_size(struct litest_device *dev)
 {
@@ -4385,6 +4410,7 @@ litest_setup_tests(void)
 	litest_add("touchpad:scroll", touchpad_edge_scroll_within_buttonareas, LITEST_CLICKPAD, LITEST_ANY);
 	litest_add("touchpad:scroll", touchpad_edge_scroll_buttonareas_click_stops_scroll, LITEST_CLICKPAD, LITEST_ANY);
 	litest_add("touchpad:scroll", touchpad_edge_scroll_clickfinger_click_stops_scroll, LITEST_CLICKPAD, LITEST_ANY);
+	litest_add("touchpad:scroll", touchpad_edge_scroll_into_area, LITEST_TOUCHPAD, LITEST_ANY);
 
 	litest_add("touchpad:palm", touchpad_palm_detect_at_edge, LITEST_TOUCHPAD, LITEST_ANY);
 	litest_add("touchpad:palm", touchpad_palm_detect_at_bottom_corners, LITEST_TOUCHPAD, LITEST_CLICKPAD);

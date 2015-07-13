@@ -360,6 +360,11 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 		if (t->palm.state != PALM_NONE)
 			continue;
 
+		/* only scroll with the finger in the previous edge */
+		if (t->scroll.edge &&
+		    (tp_touch_get_edge(tp, t) & t->scroll.edge) == 0)
+			continue;
+
 		switch (t->scroll.edge) {
 			case EDGE_NONE:
 				if (t->scroll.direction != -1) {
