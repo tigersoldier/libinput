@@ -91,6 +91,16 @@ enable_buttonareas(struct litest_device *dev)
 	litest_assert_int_eq(status, expected);
 }
 
+static inline int
+is_synaptics_semi_mt(struct litest_device *dev)
+{
+	struct libevdev *evdev = dev->evdev;
+
+	return libevdev_has_property(evdev, INPUT_PROP_SEMI_MT) &&
+		libevdev_get_id_vendor(evdev) == 0x2 &&
+		libevdev_get_id_product(evdev) == 0x7;
+}
+
 START_TEST(touchpad_1fg_motion)
 {
 	struct litest_device *dev = litest_current_device();
@@ -461,10 +471,14 @@ START_TEST(touchpad_scroll_defaults)
 
 	method = libinput_device_config_scroll_get_methods(device);
 	ck_assert(method & LIBINPUT_CONFIG_SCROLL_EDGE);
-	if (libevdev_get_num_slots(evdev) > 1)
+	if (libevdev_get_num_slots(evdev) > 1 &&
+	    !is_synaptics_semi_mt(dev))
 		ck_assert(method & LIBINPUT_CONFIG_SCROLL_2FG);
+	else
+		ck_assert((method & LIBINPUT_CONFIG_SCROLL_2FG) == 0);
 
-	if (libevdev_get_num_slots(evdev) > 1)
+	if (libevdev_get_num_slots(evdev) > 1 &&
+	    !is_synaptics_semi_mt(dev))
 		expected = LIBINPUT_CONFIG_SCROLL_2FG;
 	else
 		expected = LIBINPUT_CONFIG_SCROLL_EDGE;
@@ -480,7 +494,8 @@ START_TEST(touchpad_scroll_defaults)
 	status = libinput_device_config_scroll_set_method(device,
 					  LIBINPUT_CONFIG_SCROLL_2FG);
 
-	if (libevdev_get_num_slots(evdev) > 1)
+	if (libevdev_get_num_slots(evdev) > 1 &&
+	    !is_synaptics_semi_mt(dev))
 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_SUCCESS);
 	else
 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_UNSUPPORTED);

@@ -1521,16 +1521,27 @@ tp_init_accel(struct tp_dispatch *tp, double diagonal)
 }
 
 static uint32_t
+tp_scroll_get_methods(struct tp_dispatch *tp)
+{
+	uint32_t methods = LIBINPUT_CONFIG_SCROLL_EDGE;
+
+	/* some Synaptics semi-mt touchpads have a terrible 2fg resolution,
+	 * causing scroll jumps. For all other 2fg touchpads, we enable 2fg
+	 * scrolling */
+	if (tp->ntouches >= 2 &&
+	    (tp->device->model_flags & EVDEV_MODEL_JUMPING_SEMI_MT) == 0)
+		methods |= LIBINPUT_CONFIG_SCROLL_2FG;
+
+	return methods;
+}
+
+static uint32_t
 tp_scroll_config_scroll_method_get_methods(struct libinput_device *device)
 {
 	struct evdev_device *evdev = (struct evdev_device*)device;
 	struct tp_dispatch *tp = (struct tp_dispatch*)evdev->dispatch;
-	uint32_t methods = LIBINPUT_CONFIG_SCROLL_EDGE;
 
-	if (tp->ntouches >= 2)
-		methods |= LIBINPUT_CONFIG_SCROLL_2FG;
-
-	return methods;
+	return tp_scroll_get_methods(tp);
 }
 
 static enum libinput_config_status
@@ -1564,10 +1575,21 @@ tp_scroll_config_scroll_method_get_method(struct libinput_device *device)
 static enum libinput_config_scroll_method
 tp_scroll_get_default_method(struct tp_dispatch *tp)
 {
-	if (tp->ntouches >= 2)
-		return LIBINPUT_CONFIG_SCROLL_2FG;
+	uint32_t methods;
+	enum libinput_config_scroll_method method;
+
+	methods = tp_scroll_get_methods(tp);
+
+	if (methods & LIBINPUT_CONFIG_SCROLL_2FG)
+		method = LIBINPUT_CONFIG_SCROLL_2FG;
 	else
-		return LIBINPUT_CONFIG_SCROLL_EDGE;
+		method = LIBINPUT_CONFIG_SCROLL_EDGE;
+
+	if ((methods & method) == 0)
+		log_bug_libinput(tp_libinput_context(tp),
+				 "Invalid default scroll method %d\n",
+				 method);
+	return method;
 }
 
 static enum libinput_config_scroll_method
