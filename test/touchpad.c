@@ -32,6 +32,28 @@
 #include "libinput-util.h"
 #include "litest.h"
 
+static bool
+has_2fg_scroll(struct litest_device *dev)
+{
+	struct libinput_device *device = dev->libinput_device;
+
+	return !!(libinput_device_config_scroll_get_methods(device) &
+		  LIBINPUT_CONFIG_SCROLL_2FG);
+}
+
+static void
+enable_2fg_scroll(struct litest_device *dev)
+{
+	enum libinput_config_status status, expected;
+	struct libinput_device *device = dev->libinput_device;
+
+	status = libinput_device_config_scroll_set_method(device,
+					  LIBINPUT_CONFIG_SCROLL_2FG);
+
+	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
+	litest_assert_int_eq(status, expected);
+}
+
 static void
 enable_edge_scroll(struct litest_device *dev)
 {
@@ -2099,8 +2121,11 @@ START_TEST(touchpad_palm_detect_at_edge)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!touchpad_has_palm_detect_size(dev))
+	if (!touchpad_has_palm_detect_size(dev) ||
+	    !has_2fg_scroll(dev))
 		return;
+
+	enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -2143,8 +2168,11 @@ START_TEST(touchpad_palm_detect_at_bottom_corners)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!touchpad_has_palm_detect_size(dev))
+	if (!touchpad_has_palm_detect_size(dev) ||
+	    !has_2fg_scroll(dev))
 		return;
+
+	enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -2169,8 +2197,11 @@ START_TEST(touchpad_palm_detect_at_top_corners)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!touchpad_has_palm_detect_size(dev))
+	if (!touchpad_has_palm_detect_size(dev) ||
+	    !has_2fg_scroll(dev))
 		return;
+
+	enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -2195,8 +2226,11 @@ START_TEST(touchpad_palm_detect_palm_stays_palm)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!touchpad_has_palm_detect_size(dev))
+	if (!touchpad_has_palm_detect_size(dev) ||
+	    !has_2fg_scroll(dev))
 		return;
+
+	enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -2214,8 +2248,11 @@ START_TEST(touchpad_palm_detect_palm_becomes_pointer)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!touchpad_has_palm_detect_size(dev))
+	if (!touchpad_has_palm_detect_size(dev) ||
+	    !has_2fg_scroll(dev))
 		return;
+
+	enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
