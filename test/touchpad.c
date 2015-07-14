@@ -2787,8 +2787,8 @@ START_TEST(touchpad_semi_mt_hover_down_hover_down)
 		litest_event(dev, EV_SYN, SYN_REPORT, 0);
 
 		for (j = 0; j < 5; j++) {
-			x += 200;
-			y += 200;
+			x -= 200;
+			y -= 200;
 			litest_event(dev, EV_ABS, ABS_MT_POSITION_X, x);
 			litest_event(dev, EV_ABS, ABS_MT_POSITION_Y, y);
 			litest_event(dev, EV_ABS, ABS_X, x);
