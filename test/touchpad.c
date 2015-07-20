@@ -840,11 +840,18 @@ START_TEST(clickpad_finger_pin)
 	struct libinput *li = dev->libinput;
 	struct libevdev *evdev = dev->evdev;
 	const struct input_absinfo *abs;
+	double w, h;
+	double dist;
 
 	abs = libevdev_get_abs_info(evdev, ABS_MT_POSITION_X);
 	ck_assert_notnull(abs);
 	if (abs->resolution == 0)
 		return;
+
+	if (libinput_device_get_size(dev->libinput_device, &w, &h) != 0)
+		return;
+
+	dist = 100.0/max(w, h);
 
 	litest_drain_events(li);
 
@@ -859,9 +866,9 @@ START_TEST(clickpad_finger_pin)
 	litest_button_click(dev, BTN_LEFT, true);
 	litest_drain_events(li);
 
-	litest_touch_move_to(dev, 0, 50, 50, 51, 51, 10, 1);
-	litest_touch_move_to(dev, 0, 51, 51, 49, 49, 10, 1);
-	litest_touch_move_to(dev, 0, 49, 49, 50, 50, 10, 1);
+	litest_touch_move_to(dev, 0, 50, 50, 50 + dist, 50 + dist, 10, 1);
+	litest_touch_move_to(dev, 0, 50 + dist, 50 + dist, 50, 50, 10, 1);
+	litest_touch_move_to(dev, 0, 50, 50, 50 - dist, 50 - dist, 10, 1);
 
 	litest_assert_empty_queue(li);
 
@@ -869,9 +876,9 @@ START_TEST(clickpad_finger_pin)
 	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_BUTTON);
 
 	/* still pinned after release */
-	litest_touch_move_to(dev, 0, 50, 50, 51, 51, 10, 1);
-	litest_touch_move_to(dev, 0, 51, 51, 49, 49, 10, 1);
-	litest_touch_move_to(dev, 0, 49, 49, 50, 50, 10, 1);
+	litest_touch_move_to(dev, 0, 50, 50, 50 + dist, 50 + dist, 10, 1);
+	litest_touch_move_to(dev, 0, 50 + dist, 50 + dist, 50, 50, 10, 1);
+	litest_touch_move_to(dev, 0, 50, 50, 50 - dist, 50 - dist, 10, 1);
 
 	litest_assert_empty_queue(li);
 
