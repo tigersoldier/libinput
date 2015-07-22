@@ -63,6 +63,7 @@ const char *filter_device = NULL;
 const char *filter_group = NULL;
 
 static inline void litest_remove_model_quirks(void);
+static void litest_init_udev_rules(void);
 
 /* defined for the litest selftest */
 #ifndef LITEST_DISABLE_BACKTRACE_LOGGING
@@ -442,7 +443,7 @@ litest_drop_udev_rules(void)
 		    &entries,
 		    litest_udev_rule_filter,
 		    alphasort);
-	if (n < 0)
+	if (n <= 0)
 		return;
 
 	while (n--) {
@@ -462,7 +463,6 @@ litest_drop_udev_rules(void)
 	}
 	free(entries);
 
-	litest_remove_model_quirks();
 	litest_reload_udev_rules();
 }
 
@@ -822,6 +822,8 @@ litest_run(int argc, char **argv)
 	if (getenv("LITEST_VERBOSE"))
 		verbose = 1;
 
+	litest_init_udev_rules();
+
 	srunner_run_all(sr, CK_ENV);
 	failed = srunner_ntests_failed(sr);
 	srunner_free(sr);
@@ -839,6 +841,9 @@ litest_run(int argc, char **argv)
 		free(s->name);
 		free(s);
 	}
+
+	litest_remove_model_quirks();
+	litest_reload_udev_rules();
 
 	return failed;
 }
@@ -957,12 +962,10 @@ litest_remove_model_quirks(void)
 	unlink(UDEV_COMMON_HWDB_FILE);
 }
 
-static char *
-litest_init_udev_rules(struct litest_test_device *dev)
+static void
+litest_init_udev_rules(void)
 {
 	int rc;
-	FILE *f;
-	char *path = NULL;
 
 	rc = mkdir(UDEV_RULES_D, 0755);
 	if (rc == -1 && errno != EEXIST)
@@ -975,10 +978,18 @@ litest_init_udev_rules(struct litest_test_device *dev)
 			     strerror(errno));
 
 	litest_install_model_quirks();
+	litest_reload_udev_rules();
+}
 
-	/* device-specific udev rules */
+static char *
+litest_init_device_udev_rules(struct litest_test_device *dev)
+{
+	int rc;
+	FILE *f;
+	char *path = NULL;
+
 	if (!dev->udev_rule)
-		goto out;
+		return NULL;
 
 	rc = xasprintf(&path,
 		      "%s/%s%s.rules",
@@ -995,7 +1006,6 @@ litest_init_udev_rules(struct litest_test_device *dev)
 	litest_assert_int_ge(fputs(dev->udev_rule, f), 0);
 	fclose(f);
 
-out:
 	litest_reload_udev_rules();
 
 	return path;
@@ -1029,13 +1039,11 @@ litest_create(enum litest_device_type which,
 	d = zalloc(sizeof(*d));
 	litest_assert(d != NULL);
 
-	udev_file = litest_init_udev_rules(*dev);
-
+	udev_file = litest_init_device_udev_rules(*dev);
 	/* device has custom create method */
 	if ((*dev)->create) {
 		(*dev)->create(d);
 		if (abs_override || events_override) {
-			litest_remove_model_quirks();
 			if (udev_file)
 				unlink(udev_file);
 			litest_abort_msg("Custom create cannot be overridden");
@@ -1186,10 +1194,10 @@ litest_delete_device(struct litest_device *d)
 		return;
 
 	if (d->udev_rule_file) {
-		litest_remove_model_quirks();
 		unlink(d->udev_rule_file);
 		free(d->udev_rule_file);
 		d->udev_rule_file = NULL;
+		litest_reload_udev_rules();
 	}
 
 	libinput_device_unref(d->libinput_device);
