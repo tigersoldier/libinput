@@ -341,6 +341,40 @@ tp_process_absolute_st(struct tp_dispatch *tp,
 	}
 }
 
+static inline void
+tp_restore_synaptics_touches(struct tp_dispatch *tp,
+			     uint64_t time)
+{
+	unsigned int i;
+	unsigned int nfake_touches;
+
+	nfake_touches = tp_fake_finger_count(tp);
+	if (nfake_touches < 3)
+		return;
+
+	if (tp->nfingers_down >= nfake_touches ||
+	    tp->nfingers_down == tp->num_slots)
+		return;
+
+	/* Synaptics devices may end touch 2 on BTN_TOOL_TRIPLETAP
+	 * and start it again on the next frame with different coordinates
+	 * (#91352). We search the touches we have, if there is one that has
+	 * just ended despite us being on tripletap, we move it back to
+	 * update.
+	 */
+	for (i = 0; i < tp->num_slots; i++) {
+		struct tp_touch *t = tp_get_touch(tp, i);
+
+		if (t->state != TOUCH_END)
+			continue;
+
+		/* new touch, move it through begin to update immediately */
+		tp_new_touch(tp, t, time);
+		tp_begin_touch(tp, t, time);
+		t->state = TOUCH_UPDATE;
+	}
+}
+
 static void
 tp_process_fake_touches(struct tp_dispatch *tp,
 			uint64_t time)
@@ -352,6 +386,10 @@ tp_process_fake_touches(struct tp_dispatch *tp,
 	nfake_touches = tp_fake_finger_count(tp);
 	if (nfake_touches == FAKE_FINGER_OVERFLOW)
 		return;
+
+	if (tp->device->model_flags &
+	    EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD)
+		tp_restore_synaptics_touches(tp, time);
 
 	start = tp->has_mt ? tp->num_slots : 0;
 	for (i = start; i < tp->ntouches; i++) {
@@ -722,6 +760,24 @@ tp_unhover_touches(struct tp_dispatch *tp, uint64_t time)
 
 }
 
+static inline bool
+tp_need_motion_history_reset(struct tp_dispatch *tp)
+{
+	/* semi-mt finger postions may "jump" when nfingers changes */
+	if (tp->semi_mt && tp->nfingers_down != tp->old_nfingers_down)
+		return true;
+
+	/* if we're transitioning between slots and fake touches in either
+	 * direction, we may get a coordinate jump
+	 */
+	if (tp->nfingers_down != tp->old_nfingers_down &&
+		 (tp->nfingers_down > tp->num_slots ||
+		 tp->old_nfingers_down > tp->num_slots))
+		return true;
+
+	return false;
+}
+
 static void
 tp_process_state(struct tp_dispatch *tp, uint64_t time)
 {
@@ -729,16 +785,23 @@ tp_process_state(struct tp_dispatch *tp, uint64_t time)
 	struct tp_touch *first = tp_get_touch(tp, 0);
 	unsigned int i;
 	bool restart_filter = false;
+	bool want_motion_reset;
 
 	tp_process_fake_touches(tp, time);
 	tp_unhover_touches(tp, time);
 
+	want_motion_reset = tp_need_motion_history_reset(tp);
+
 	for (i = 0; i < tp->ntouches; i++) {
 		t = tp_get_touch(tp, i);
 
-		/* semi-mt finger postions may "jump" when nfingers changes */
-		if (tp->semi_mt && tp->nfingers_down != tp->old_nfingers_down)
+		if (want_motion_reset) {
 			tp_motion_history_reset(t);
+			t->quirks.reset_motion_history = true;
+		} else if (t->quirks.reset_motion_history) {
+			tp_motion_history_reset(t);
+			t->quirks.reset_motion_history = false;
+		}
 
 		if (i >= tp->num_slots && t->state != TOUCH_NONE) {
 			t->point = first->point;
@@ -1224,7 +1287,7 @@ evdev_tag_touchpad(struct evdev_device *device,
 	 */
 	bustype = libevdev_get_id_bustype(device->evdev);
 	if (bustype == BUS_USB) {
-		if (device->model == EVDEV_MODEL_APPLE_TOUCHPAD)
+		if (device->model_flags & EVDEV_MODEL_APPLE_TOUCHPAD)
 			 device->tags |= EVDEV_TAG_INTERNAL_TOUCHPAD;
 	} else if (bustype != BUS_BLUETOOTH)
 		device->tags |= EVDEV_TAG_INTERNAL_TOUCHPAD;
@@ -1350,14 +1413,10 @@ tp_init_accel(struct tp_dispatch *tp, double diagonal)
 	tp->accel.x_scale_coeff = (DEFAULT_MOUSE_DPI/25.4) / res_x;
 	tp->accel.y_scale_coeff = (DEFAULT_MOUSE_DPI/25.4) / res_y;
 
-	switch (tp->device->model) {
-	case EVDEV_MODEL_LENOVO_X230:
+	if (tp->device->model_flags & EVDEV_MODEL_LENOVO_X230)
 		profile = touchpad_lenovo_x230_accel_profile;
-		break;
-	default:
+	else
 		profile = touchpad_accel_profile_linear;
-		break;
-	}
 
 	if (evdev_device_init_pointer_acceleration(tp->device, profile) == -1)
 		return -1;
@@ -1460,7 +1519,7 @@ tp_init_palmdetect(struct tp_dispatch *tp,
 
 	/* Wacom doesn't have internal touchpads,
 	 * Apple touchpads are always big enough to warrant palm detection */
-	if (device->model == EVDEV_MODEL_WACOM_TOUCHPAD)
+	if (device->model_flags & EVDEV_MODEL_WACOM_TOUCHPAD)
 		return 0;
 
 	/* Enable palm detection on touchpads >= 70 mm. Anything smaller
