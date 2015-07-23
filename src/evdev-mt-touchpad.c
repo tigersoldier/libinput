@@ -409,8 +409,7 @@ tp_process_trackpoint_button(struct tp_dispatch *tp,
 	struct evdev_dispatch *dispatch;
 	struct input_event event;
 
-	if (!tp->buttons.trackpoint ||
-	    (tp->device->tags & EVDEV_TAG_TOUCHPAD_TRACKPOINT) == 0)
+	if (!tp->buttons.trackpoint)
 		return;
 
 	dispatch = tp->buttons.trackpoint->dispatch;
@@ -1291,10 +1290,6 @@ evdev_tag_touchpad(struct evdev_device *device,
 			 device->tags |= EVDEV_TAG_INTERNAL_TOUCHPAD;
 	} else if (bustype != BUS_BLUETOOTH)
 		device->tags |= EVDEV_TAG_INTERNAL_TOUCHPAD;
-
-	if (udev_device_get_property_value(udev_device,
-					   "TOUCHPAD_HAS_TRACKPOINT_BUTTONS"))
-		device->tags |= EVDEV_TAG_TOUCHPAD_TRACKPOINT;
 }
 
 static struct evdev_dispatch_interface tp_interface = {
