@@ -897,15 +897,18 @@ START_TEST(pointer_accel_defaults)
 	double speed;
 
 	ck_assert(libinput_device_config_accel_is_available(device));
-	ck_assert(libinput_device_config_accel_get_default_speed(device) == 0.0);
-	ck_assert(libinput_device_config_accel_get_speed(device) == 0.0);
+	ck_assert_double_eq(libinput_device_config_accel_get_default_speed(device),
+			    0.0);
+	ck_assert_double_eq(libinput_device_config_accel_get_speed(device),
+			    0.0);
 
 	for (speed = -2.0; speed < -1.0; speed += 0.2) {
 		status = libinput_device_config_accel_set_speed(device,
 								speed);
 		ck_assert_int_eq(status,
 				 LIBINPUT_CONFIG_STATUS_INVALID);
-		ck_assert(libinput_device_config_accel_get_speed(device) == 0.0);
+		ck_assert_double_eq(libinput_device_config_accel_get_speed(device),
+				    0.0);
 	}
 
 	for (speed = -1.0; speed <= 1.0; speed += 0.2) {
@@ -913,7 +916,8 @@ START_TEST(pointer_accel_defaults)
 								speed);
 		ck_assert_int_eq(status,
 				 LIBINPUT_CONFIG_STATUS_SUCCESS);
-		ck_assert(libinput_device_config_accel_get_speed(device) == speed);
+		ck_assert_double_eq(libinput_device_config_accel_get_speed(device),
+				    speed);
 	}
 
 	for (speed = 1.2; speed <= -2.0; speed += 0.2) {
@@ -921,7 +925,8 @@ START_TEST(pointer_accel_defaults)
 								speed);
 		ck_assert_int_eq(status,
 				 LIBINPUT_CONFIG_STATUS_INVALID);
-		ck_assert(libinput_device_config_accel_get_speed(device) == 1.0);
+		ck_assert_double_eq(libinput_device_config_accel_get_speed(device),
+				    1.0);
 	}
 
 }
@@ -952,8 +957,10 @@ START_TEST(pointer_accel_defaults_absolute)
 	double speed;
 
 	ck_assert(!libinput_device_config_accel_is_available(device));
-	ck_assert(libinput_device_config_accel_get_default_speed(device) == 0.0);
-	ck_assert(libinput_device_config_accel_get_speed(device) == 0.0);
+	ck_assert_double_eq(libinput_device_config_accel_get_default_speed(device),
+			    0.0);
+	ck_assert_double_eq(libinput_device_config_accel_get_speed(device),
+			    0.0);
 
 	for (speed = -2.0; speed <= 2.0; speed += 0.2) {
 		status = libinput_device_config_accel_set_speed(device,
@@ -964,7 +971,8 @@ START_TEST(pointer_accel_defaults_absolute)
 		else
 			ck_assert_int_eq(status,
 					 LIBINPUT_CONFIG_STATUS_INVALID);
-		ck_assert(libinput_device_config_accel_get_speed(device) == 0.0);
+		ck_assert_double_eq(libinput_device_config_accel_get_speed(device),
+				    0.0);
 	}
 }
 END_TEST
@@ -975,8 +983,10 @@ START_TEST(pointer_accel_defaults_absolute_relative)
 	struct libinput_device *device = dev->libinput_device;
 
 	ck_assert(libinput_device_config_accel_is_available(device));
-	ck_assert(libinput_device_config_accel_get_default_speed(device) == 0.0);
-	ck_assert(libinput_device_config_accel_get_speed(device) == 0.0);
+	ck_assert_double_eq(libinput_device_config_accel_get_default_speed(device),
+			    0.0);
+	ck_assert_double_eq(libinput_device_config_accel_get_speed(device),
+			    0.0);
 }
 END_TEST
 
@@ -1008,7 +1018,7 @@ START_TEST(pointer_accel_direction_change)
 		pev = libinput_event_get_pointer_event(event);
 
 		delta = libinput_event_pointer_get_dx(pev);
-		ck_assert(delta <= 0.0);
+		ck_assert_double_le(delta, 0.0);
 		max_accel = delta;
 		libinput_event_destroy(event);
 		event = libinput_get_event(li);
@@ -1016,8 +1026,8 @@ START_TEST(pointer_accel_direction_change)
 
 	pev = libinput_event_get_pointer_event(event);
 	delta = libinput_event_pointer_get_dx(pev);
-	ck_assert(delta > 0.0);
-	ck_assert(delta < -max_accel);
+	ck_assert_double_gt(delta, 0.0);
+	ck_assert_double_lt(delta, -max_accel);
 	libinput_event_destroy(event);
 }
 END_TEST
