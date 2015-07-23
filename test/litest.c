@@ -1231,6 +1231,9 @@ axis_replacement_value(struct axis_replacement *axes,
 {
 	struct axis_replacement *axis = axes;
 
+	if (!axes)
+		return false;
+
 	while (axis->evcode != -1) {
 		if (axis->evcode == evcode) {
 			*value = axis->value;
@@ -1275,9 +1278,6 @@ litest_auto_assign_value(struct litest_device *d,
 		break;
 	default:
 		value = -1;
-		if (!axes)
-			break;
-
 		if (!axis_replacement_value(axes, ev->code, &value) &&
 		    d->interface->get_axis_default)
 			d->interface->get_axis_default(d, ev->code, &value);

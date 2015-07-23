@@ -208,7 +208,8 @@ tp_begin_touch(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
 	t->millis = time;
 	tp->nfingers_down++;
 	t->palm.time = time;
-	t->is_thumb = false;
+	t->thumb.state = THUMB_STATE_MAYBE;
+	t->thumb.first_touch_time = time;
 	t->tap.is_thumb = false;
 	assert(tp->nfingers_down >= 1);
 }
@@ -314,6 +315,8 @@ tp_process_absolute(struct tp_dispatch *tp,
 		break;
 	case ABS_MT_PRESSURE:
 		t->pressure = e->value;
+		t->dirty = true;
+		tp->queued |= TOUCHPAD_EVENT_MOTION;
 		break;
 	}
 }
@@ -499,7 +502,7 @@ tp_touch_active(struct tp_dispatch *tp, struct tp_touch *t)
 	return (t->state == TOUCH_BEGIN || t->state == TOUCH_UPDATE) &&
 		t->palm.state == PALM_NONE &&
 		!t->pinned.is_pinned &&
-		!t->is_thumb &&
+		t->thumb.state != THUMB_STATE_YES &&
 		tp_button_touch_active(tp, t) &&
 		tp_edge_scroll_touch_active(tp, t);
 }
@@ -642,20 +645,63 @@ out:
 		  t->palm.state == PALM_TYPING ? "typing" : "trackpoint");
 }
 
-static void
-tp_thumb_detect(struct tp_dispatch *tp, struct tp_touch *t)
+static inline const char*
+thumb_state_to_str(enum tp_thumb_state state)
 {
-	/* once a thumb, always a thumb */
-	if (!tp->thumb.detect_thumbs || t->is_thumb)
+	switch(state){
+	CASE_RETURN_STRING(THUMB_STATE_NO);
+	CASE_RETURN_STRING(THUMB_STATE_YES);
+	CASE_RETURN_STRING(THUMB_STATE_MAYBE);
+	}
+
+	return NULL;
+}
+
+static void
+tp_thumb_detect(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
+{
+	enum tp_thumb_state state = t->thumb.state;
+
+	/* once a thumb, always a thumb, once ruled out always ruled out */
+	if (!tp->thumb.detect_thumbs ||
+	    t->thumb.state != THUMB_STATE_MAYBE)
 		return;
+
+	if (t->point.y < tp->thumb.upper_thumb_line) {
+		/* if a potential thumb is above the line, it won't ever
+		 * label as thumb */
+		t->thumb.state = THUMB_STATE_NO;
+		goto out;
+	}
+
+	/* If the thumb moves by more than 7mm, it's not a resting thumb */
+	if (t->state == TOUCH_BEGIN)
+		t->thumb.initial = t->point;
+	else if (t->state == TOUCH_UPDATE) {
+		struct device_float_coords delta;
+		struct normalized_coords normalized;
+
+		delta = device_delta(t->point, t->thumb.initial);
+		normalized = tp_normalize_delta(tp, delta);
+		if (normalized_length(normalized) >
+			TP_MM_TO_DPI_NORMALIZED(7)) {
+			t->thumb.state = THUMB_STATE_NO;
+			goto out;
+		}
+	}
 
 	/* Note: a thumb at the edge of the touchpad won't trigger the
-	 * threshold, the surface area is usually too small.
+	 * threshold, the surface area is usually too small. So we have a
+	 * two-stage detection: pressure and time within the area.
+	 * A finger that remains at the very bottom of the touchpad becomes
+	 * a thumb.
 	 */
-	if (t->pressure < tp->thumb.threshold)
-		return;
-
-	t->is_thumb = true;
+	if (t->pressure > tp->thumb.threshold)
+		t->thumb.state = THUMB_STATE_YES;
+	else if (t->point.y > tp->thumb.lower_thumb_line &&
+		 tp->scroll.method != LIBINPUT_CONFIG_SCROLL_EDGE &&
+		 t->thumb.first_touch_time + 300 < time)
+		t->thumb.state = THUMB_STATE_YES;
 
 	/* now what? we marked it as thumb, so:
 	 *
@@ -667,6 +713,12 @@ tp_thumb_detect(struct tp_dispatch *tp, struct tp_touch *t)
 	 * - tapping: honour thumb on begin, ignore it otherwise for now,
 	 *   this gets a tad complicated otherwise
 	 */
+out:
+	if (t->thumb.state != state)
+		log_debug(tp_libinput_context(tp),
+			  "thumb state: %s → %s\n",
+			  thumb_state_to_str(state),
+			  thumb_state_to_str(t->thumb.state));
 }
 
 static void
@@ -760,6 +812,48 @@ tp_unhover_touches(struct tp_dispatch *tp, uint64_t time)
 
 }
 
+static inline void
+tp_position_fake_touches(struct tp_dispatch *tp)
+{
+	struct tp_touch *t;
+	struct tp_touch *topmost = NULL;
+	unsigned int start, i;
+
+	if (tp_fake_finger_count(tp) <= tp->num_slots)
+		return;
+
+	/* We have at least one fake touch down. Find the top-most real
+	 * touch and copy its coordinates over to to all fake touches.
+	 * This is more reliable than just taking the first touch.
+	 */
+	for (i = 0; i < tp->num_slots; i++) {
+		t = tp_get_touch(tp, i);
+		if (t->state == TOUCH_END ||
+		    t->state == TOUCH_NONE)
+			continue;
+
+		if (topmost == NULL || t->point.y < topmost->point.y)
+			topmost = t;
+	}
+
+	if (!topmost) {
+		log_bug_libinput(tp_libinput_context(tp),
+				 "Unable to find topmost touch\n");
+		return;
+	}
+
+	start = tp->has_mt ? tp->num_slots : 1;
+	for (i = start; i < tp->ntouches; i++) {
+		t = tp_get_touch(tp, i);
+		if (t->state == TOUCH_NONE)
+			continue;
+
+		t->point = topmost->point;
+		if (!t->dirty)
+			t->dirty = topmost->dirty;
+	}
+}
+
 static inline bool
 tp_need_motion_history_reset(struct tp_dispatch *tp)
 {
@@ -782,13 +876,13 @@ static void
 tp_process_state(struct tp_dispatch *tp, uint64_t time)
 {
 	struct tp_touch *t;
-	struct tp_touch *first = tp_get_touch(tp, 0);
 	unsigned int i;
 	bool restart_filter = false;
 	bool want_motion_reset;
 
 	tp_process_fake_touches(tp, time);
 	tp_unhover_touches(tp, time);
+	tp_position_fake_touches(tp);
 
 	want_motion_reset = tp_need_motion_history_reset(tp);
 
@@ -803,16 +897,10 @@ tp_process_state(struct tp_dispatch *tp, uint64_t time)
 			t->quirks.reset_motion_history = false;
 		}
 
-		if (i >= tp->num_slots && t->state != TOUCH_NONE) {
-			t->point = first->point;
-			if (!t->dirty)
-				t->dirty = first->dirty;
-		}
-
 		if (!t->dirty)
 			continue;
 
-		tp_thumb_detect(tp, t);
+		tp_thumb_detect(tp, t, time);
 		tp_palm_detect(tp, t, time);
 
 		tp_motion_hysteresis(tp, t);
@@ -1635,6 +1723,13 @@ tp_init_thumb(struct tp_dispatch *tp)
 {
 	struct evdev_device *device = tp->device;
 	const struct input_absinfo *abs;
+	double w = 0.0, h = 0.0;
+	int xres, yres;
+	int ymax;
+	double threshold;
+
+	if (!tp->buttons.is_clickpad)
+		return 0;
 
 	abs = libevdev_get_abs_info(device->evdev, ABS_MT_PRESSURE);
 	if (!abs)
@@ -1643,13 +1738,32 @@ tp_init_thumb(struct tp_dispatch *tp)
 	if (abs->maximum - abs->minimum < 255)
 		return 0;
 
-	/* The touchpads we looked at so far have a clear thumb threshold of
-	 * ~100, you don't reach that with a normal finger interaction.
+	/* if the touchpad is less than 50mm high, skip thumb detection.
+	 * it's too small to meaningfully interact with a thumb on the
+	 * touchpad */
+	evdev_device_get_size(device, &w, &h);
+	if (h < 50)
+		return 0;
+
+	/* Our reference touchpad is the T440s with 42x42 resolution.
+	 * Higher-res touchpads exhibit higher pressure for the same
+	 * interaction. On the T440s, the threshold value is 100, you don't
+	 * reach that with a normal finger interaction.
 	 * Note: "thumb" means massive touch that should not interact, not
 	 * "using the tip of my thumb for a pinch gestures".
 	 */
-	tp->thumb.threshold = 100;
+	xres = tp->device->abs.absinfo_x->resolution;
+	yres = tp->device->abs.absinfo_y->resolution;
+	threshold = 100.0 * hypot(xres, yres)/hypot(42, 42);
+	tp->thumb.threshold = max(100, threshold);
 	tp->thumb.detect_thumbs = true;
+
+	/* detect thumbs by pressure in the bottom 15mm, detect thumbs by
+	 * lingering in the bottom 8mm */
+	ymax = tp->device->abs.absinfo_y->maximum;
+	yres = tp->device->abs.absinfo_y->resolution;
+	tp->thumb.upper_thumb_line = ymax - yres * 15;
+	tp->thumb.lower_thumb_line = ymax - yres * 8;
 
 	return 0;
 }
