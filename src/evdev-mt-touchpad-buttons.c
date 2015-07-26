@@ -714,7 +714,8 @@ tp_init_buttons(struct tp_dispatch *tp,
 				       "%s: clickpad advertising right button\n",
 				       device->devname);
 	} else if (libevdev_has_event_code(device->evdev, EV_KEY, BTN_LEFT) &&
-		   !tp->buttons.is_clickpad) {
+		   !tp->buttons.is_clickpad &&
+		   libevdev_get_id_vendor(device->evdev) != VENDOR_ID_APPLE) {
 			log_bug_kernel(libinput,
 				       "%s: non clickpad without right button?\n",
 				       device->devname);
