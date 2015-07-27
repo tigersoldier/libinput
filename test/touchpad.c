@@ -185,6 +185,7 @@ START_TEST(touchpad_2fg_scroll)
 	if (!has_2fg_scroll(dev))
 		return;
 
+	enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	test_2fg_scroll(dev, 0.1, 40, 0);
@@ -223,6 +224,7 @@ START_TEST(touchpad_2fg_scroll_slow_distance)
 		y_move = 20.0;
 	}
 
+	enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 49, 50);
@@ -270,6 +272,7 @@ START_TEST(touchpad_2fg_scroll_source)
 	if (!has_2fg_scroll(dev))
 		return;
 
+	enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	test_2fg_scroll(dev, 0, 30, 0);
@@ -294,6 +297,7 @@ START_TEST(touchpad_2fg_scroll_semi_mt)
 	if (!has_2fg_scroll(dev))
 		return;
 
+	enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 20, 20);
@@ -317,6 +321,7 @@ START_TEST(touchpad_2fg_scroll_return_to_motion)
 	if (!has_2fg_scroll(dev))
 		return;
 
+	enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	/* start with motion */
@@ -387,6 +392,7 @@ START_TEST(touchpad_scroll_natural)
 	if (!has_2fg_scroll(dev))
 		return;
 
+	enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	libinput_device_config_scroll_set_natural_scroll_enabled(dev->libinput_device, 1);
