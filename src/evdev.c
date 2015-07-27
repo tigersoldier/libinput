@@ -44,7 +44,7 @@
 #include "libinput-private.h"
 
 #define DEFAULT_WHEEL_CLICK_ANGLE 15
-#define DEFAULT_MIDDLE_BUTTON_SCROLL_TIMEOUT 200
+#define DEFAULT_MIDDLE_BUTTON_SCROLL_TIMEOUT ms2us(200)
 
 enum evdev_key_type {
 	EVDEV_KEY_TYPE_NONE,
@@ -457,7 +457,7 @@ evdev_button_scroll_button(struct evdev_device *device,
 {
 	if (is_press) {
 		libinput_timer_set(&device->scroll.timer,
-				time + DEFAULT_MIDDLE_BUTTON_SCROLL_TIMEOUT);
+				   time + DEFAULT_MIDDLE_BUTTON_SCROLL_TIMEOUT);
 		device->scroll.button_down_time = time;
 	} else {
 		libinput_timer_cancel(&device->scroll.timer);
@@ -1270,7 +1270,7 @@ static inline void
 evdev_process_event(struct evdev_device *device, struct input_event *e)
 {
 	struct evdev_dispatch *dispatch = device->dispatch;
-	uint64_t time = e->time.tv_sec * 1000ULL + e->time.tv_usec / 1000;
+	uint64_t time = s2us(e->time.tv_sec) + e->time.tv_usec;
 
 #if 0
 	if (libevdev_event_is_code(e, EV_SYN, SYN_REPORT))
@@ -2153,7 +2153,7 @@ evdev_device_create(struct libinput_seat *seat,
 	device->dpi = DEFAULT_MOUSE_DPI;
 
 	/* at most 5 SYN_DROPPED log-messages per 30s */
-	ratelimit_init(&device->syn_drop_limit, 30ULL * 1000, 5);
+	ratelimit_init(&device->syn_drop_limit, s2us(30), 5);
 
 	matrix_init_identity(&device->abs.calibration);
 	matrix_init_identity(&device->abs.usermatrix);

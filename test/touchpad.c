@@ -3458,6 +3458,40 @@ START_TEST(touchpad_tool_tripletap_touch_count)
 }
 END_TEST
 
+START_TEST(touchpad_time_usec)
+{
+	struct litest_device *dev = litest_current_device();
+	struct libinput *li = dev->libinput;
+	struct libinput_event *event;
+	struct libinput_event_pointer *ptrev;
+
+	litest_disable_tap(dev->libinput_device);
+
+	litest_drain_events(li);
+
+	litest_touch_down(dev, 0, 50, 50);
+	litest_touch_move_to(dev, 0, 50, 50, 80, 50, 5, 0);
+	litest_touch_up(dev, 0);
+
+	libinput_dispatch(li);
+
+	event = libinput_get_event(li);
+	ck_assert_notnull(event);
+
+	while (event) {
+		uint64_t utime;
+
+		ptrev = litest_is_motion_event(event);
+		utime = libinput_event_pointer_get_time_usec(ptrev);
+
+		ck_assert_int_eq(libinput_event_pointer_get_time(ptrev),
+				 utime / 1000);
+		libinput_event_destroy(event);
+		event = libinput_get_event(li);
+	}
+}
+END_TEST
+
 void
 litest_setup_tests(void)
 {
@@ -3562,4 +3596,6 @@ litest_setup_tests(void)
 	litest_add("touchpad:thumb", touchpad_thumb_tap_hold_2ndfg_tap, LITEST_CLICKPAD, LITEST_SINGLE_TOUCH);
 
 	litest_add_for_device("touchpad:bugs", touchpad_tool_tripletap_touch_count, LITEST_SYNAPTICS_TOPBUTTONPAD);
+
+	litest_add("touchpad:time", touchpad_time_usec, LITEST_TOUCHPAD, LITEST_ANY);
 }

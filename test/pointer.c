@@ -1419,6 +1419,32 @@ START_TEST(middlebutton_default_disabled)
 }
 END_TEST
 
+START_TEST(pointer_time_usec)
+{
+	struct litest_device *dev = litest_current_device();
+	struct libinput *li = dev->libinput;
+	struct libinput_event_pointer *ptrev;
+	struct libinput_event *event;
+
+	litest_drain_events(dev->libinput);
+
+	litest_event(dev, EV_REL, REL_X, 1);
+	litest_event(dev, EV_REL, REL_Y, 1);
+	litest_event(dev, EV_SYN, SYN_REPORT, 0);
+
+	litest_wait_for_event(li);
+
+	event = libinput_get_event(li);
+	ptrev = litest_is_motion_event(event);
+
+	ck_assert_int_eq(libinput_event_pointer_get_time(ptrev),
+			 libinput_event_pointer_get_time_usec(ptrev) / 1000);
+
+	libinput_event_destroy(event);
+	litest_drain_events(dev->libinput);
+}
+END_TEST
+
 void
 litest_setup_tests(void)
 {
@@ -1466,4 +1492,6 @@ litest_setup_tests(void)
 	litest_add_for_device("pointer:middlebutton", middlebutton_default_alps, LITEST_ALPS_SEMI_MT);
 
 	litest_add_ranged("pointer:state", pointer_absolute_initial_state, LITEST_ABSOLUTE, LITEST_ANY, &axis_range);
+
+	litest_add("pointer:time", pointer_time_usec, LITEST_RELATIVE, LITEST_ANY);
 }

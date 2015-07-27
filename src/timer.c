@@ -57,8 +57,8 @@ libinput_timer_arm_timer_fd(struct libinput *libinput)
 	}
 
 	if (earliest_expire != UINT64_MAX) {
-		its.it_value.tv_sec = earliest_expire / 1000;
-		its.it_value.tv_nsec = (earliest_expire % 1000) * 1000 * 1000;
+		its.it_value.tv_sec = earliest_expire / ms2us(1000);
+		its.it_value.tv_nsec = (earliest_expire % ms2us(1000)) * 1000;
 	}
 
 	r = timerfd_settime(libinput->timer.fd, TFD_TIMER_ABSTIME, &its, NULL);
@@ -74,7 +74,7 @@ libinput_timer_set(struct libinput_timer *timer, uint64_t expire)
 	if (expire < now)
 		log_bug_libinput(timer->libinput,
 				 "timer offset negative\n");
-	else if ((expire - now) > 5000ULL)
+	else if ((expire - now) > ms2us(5000))
 		log_bug_libinput(timer->libinput,
 				 "timer offset more than 5s, now %"
 				 PRIu64 " expire %" PRIu64 "\n",

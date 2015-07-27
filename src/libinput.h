@@ -421,6 +421,14 @@ libinput_event_keyboard_get_time(struct libinput_event_keyboard *event);
 /**
  * @ingroup event_keyboard
  *
+ * @return The event time for this event in microseconds
+ */
+uint64_t
+libinput_event_keyboard_get_time_usec(struct libinput_event_keyboard *event);
+
+/**
+ * @ingroup event_keyboard
+ *
  * @return The keycode that triggered this key event
  */
 uint32_t
@@ -472,6 +480,14 @@ libinput_event_keyboard_get_seat_key_count(
  */
 uint32_t
 libinput_event_pointer_get_time(struct libinput_event_pointer *event);
+
+/**
+ * @ingroup event_pointer
+ *
+ * @return The event time for this event in microseconds
+ */
+uint64_t
+libinput_event_pointer_get_time_usec(struct libinput_event_pointer *event);
 
 /**
  * @ingroup event_pointer
@@ -818,6 +834,14 @@ libinput_event_touch_get_time(struct libinput_event_touch *event);
 /**
  * @ingroup event_touch
  *
+ * @return The event time for this event in microseconds
+ */
+uint64_t
+libinput_event_touch_get_time_usec(struct libinput_event_touch *event);
+
+/**
+ * @ingroup event_touch
+ *
  * Get the slot of this touch event. See the kernel's multitouch
  * protocol B documentation for more information.
  *
@@ -966,6 +990,14 @@ libinput_event_touch_get_base_event(struct libinput_event_touch *event);
  */
 uint32_t
 libinput_event_gesture_get_time(struct libinput_event_gesture *event);
+
+/**
+ * @ingroup event_gesture
+ *
+ * @return The event time for this event in microseconds
+ */
+uint64_t
+libinput_event_gesture_get_time_usec(struct libinput_event_gesture *event);
 
 /**
  * @ingroup event_gesture

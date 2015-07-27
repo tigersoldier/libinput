@@ -29,8 +29,8 @@
 
 #include "evdev-mt-touchpad.h"
 
-#define DEFAULT_GESTURE_SWITCH_TIMEOUT 100 /* ms */
-#define DEFAULT_GESTURE_2FG_SCROLL_TIMEOUT 1000 /* ms */
+#define DEFAULT_GESTURE_SWITCH_TIMEOUT ms2us(100)
+#define DEFAULT_GESTURE_2FG_SCROLL_TIMEOUT ms2us(1000)
 
 static inline const char*
 gesture_state_to_str(enum tp_gesture_2fg_state state)
