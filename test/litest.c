@@ -53,8 +53,10 @@
 #define UDEV_RULES_D "/run/udev/rules.d"
 #define UDEV_RULE_PREFIX "99-litest-"
 #define UDEV_HWDB_D "/etc/udev/hwdb.d"
-#define UDEV_COMMON_RULE_FILE UDEV_RULES_D "/91-litest-model-quirks-REMOVEME.rules"
-#define UDEV_COMMON_HWDB_FILE UDEV_HWDB_D "/91-litest-model-quirks-REMOVEME.hwdb"
+#define UDEV_MODEL_QUIRKS_RULE_FILE UDEV_RULES_D \
+	"/91-litest-model-quirks-REMOVEME.rules"
+#define UDEV_MODEL_QUIRKS_HWDB_FILE UDEV_HWDB_D \
+	"/91-litest-model-quirks-REMOVEME.hwdb"
 
 static int in_debugger = -1;
 static int verbose = 0;
@@ -947,19 +949,19 @@ litest_install_model_quirks(void)
 			 "# running, remove this file and update your hwdb: \n"
 			 "#       sudo udevadm hwdb --update\n"
 			 "#################################################################\n\n";
-	litest_copy_file(UDEV_COMMON_RULE_FILE,
-			 LIBINPUT_UDEV_RULES_FILE,
+	litest_copy_file(UDEV_MODEL_QUIRKS_RULE_FILE,
+			 LIBINPUT_MODEL_QUIRKS_UDEV_RULES_FILE,
 			 warning);
-	litest_copy_file(UDEV_COMMON_HWDB_FILE,
-			 LIBINPUT_UDEV_HWDB_FILE,
+	litest_copy_file(UDEV_MODEL_QUIRKS_HWDB_FILE,
+			 LIBINPUT_MODEL_QUIRKS_UDEV_HWDB_FILE,
 			 warning);
 }
 
 static inline void
 litest_remove_model_quirks(void)
 {
-	unlink(UDEV_COMMON_RULE_FILE);
-	unlink(UDEV_COMMON_HWDB_FILE);
+	unlink(UDEV_MODEL_QUIRKS_RULE_FILE);
+	unlink(UDEV_MODEL_QUIRKS_HWDB_FILE);
 }
 
 static void
