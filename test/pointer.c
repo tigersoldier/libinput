@@ -998,7 +998,6 @@ START_TEST(pointer_accel_direction_change)
 	struct libinput_event_pointer *pev;
 	int i;
 	double delta;
-	double max_accel;
 
 	litest_drain_events(li);
 
@@ -1019,7 +1018,6 @@ START_TEST(pointer_accel_direction_change)
 
 		delta = libinput_event_pointer_get_dx(pev);
 		ck_assert_double_le(delta, 0.0);
-		max_accel = delta;
 		libinput_event_destroy(event);
 		event = libinput_get_event(li);
 	} while (libinput_next_event_type(li) != LIBINPUT_EVENT_NONE);
@@ -1027,7 +1025,6 @@ START_TEST(pointer_accel_direction_change)
 	pev = libinput_event_get_pointer_event(event);
 	delta = libinput_event_pointer_get_dx(pev);
 	ck_assert_double_gt(delta, 0.0);
-	ck_assert_double_lt(delta, -max_accel);
 	libinput_event_destroy(event);
 }
 END_TEST
