@@ -182,6 +182,9 @@ START_TEST(touchpad_2fg_scroll)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
+	if (!has_2fg_scroll(dev))
+		return;
+
 	litest_drain_events(li);
 
 	test_2fg_scroll(dev, 0.1, 40, 0);
@@ -207,6 +210,9 @@ START_TEST(touchpad_2fg_scroll_slow_distance)
 	struct libinput_event_pointer *ptrev;
 	const struct input_absinfo *y;
 	double y_move;
+
+	if (!has_2fg_scroll(dev))
+		return;
 
 	/* We want to move > 5 mm. */
 	y = libevdev_get_abs_info(dev->evdev, ABS_Y);
@@ -261,6 +267,9 @@ START_TEST(touchpad_2fg_scroll_source)
 	struct libinput_event *event;
 	struct libinput_event_pointer *ptrev;
 
+	if (!has_2fg_scroll(dev))
+		return;
+
 	litest_drain_events(li);
 
 	test_2fg_scroll(dev, 0, 30, 0);
@@ -282,6 +291,9 @@ START_TEST(touchpad_2fg_scroll_semi_mt)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
+	if (!has_2fg_scroll(dev))
+		return;
+
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 20, 20);
@@ -301,6 +313,9 @@ START_TEST(touchpad_2fg_scroll_return_to_motion)
 {
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
+
+	if (!has_2fg_scroll(dev))
+		return;
 
 	litest_drain_events(li);
 
@@ -368,6 +383,9 @@ START_TEST(touchpad_scroll_natural)
 {
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
+
+	if (!has_2fg_scroll(dev))
+		return;
 
 	litest_drain_events(li);
 
