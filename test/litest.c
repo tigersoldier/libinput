@@ -1049,6 +1049,7 @@ litest_create(enum litest_device_type which,
 			litest_abort_msg("Custom create cannot be overridden");
 		}
 
+		d->udev_rule_file = udev_file;
 		return d;
 	}
 
