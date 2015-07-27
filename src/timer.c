@@ -71,7 +71,10 @@ libinput_timer_set(struct libinput_timer *timer, uint64_t expire)
 {
 #ifndef NDEBUG
 	uint64_t now = libinput_now(timer->libinput);
-	if (abs(expire - now) > 5000)
+	if (expire < now)
+		log_bug_libinput(timer->libinput,
+				 "timer offset negative\n");
+	else if ((expire - now) > 5000ULL)
 		log_bug_libinput(timer->libinput,
 				 "timer offset more than 5s, now %"
 				 PRIu64 " expire %" PRIu64 "\n",
