@@ -292,6 +292,9 @@ open_restricted(struct libinput *libinput,
 void
 close_restricted(struct libinput *libinput, int fd);
 
+bool
+ignore_litest_test_suite_device(struct udev_device *device);
+
 void
 libinput_seat_init(struct libinput_seat *seat,
 		   struct libinput *libinput,

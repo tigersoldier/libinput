@@ -57,6 +57,8 @@
 	"/91-litest-model-quirks-REMOVEME.rules"
 #define UDEV_MODEL_QUIRKS_HWDB_FILE UDEV_HWDB_D \
 	"/91-litest-model-quirks-REMOVEME.hwdb"
+#define UDEV_TEST_DEVICE_RULE_FILE UDEV_RULES_D \
+	"/91-litest-test-device-REMOVEME.rules"
 
 static int in_debugger = -1;
 static int verbose = 0;
@@ -955,6 +957,9 @@ litest_install_model_quirks(void)
 	litest_copy_file(UDEV_MODEL_QUIRKS_HWDB_FILE,
 			 LIBINPUT_MODEL_QUIRKS_UDEV_HWDB_FILE,
 			 warning);
+	litest_copy_file(UDEV_TEST_DEVICE_RULE_FILE,
+			 LIBINPUT_TEST_DEVICE_RULES_FILE,
+			 warning);
 }
 
 static inline void
@@ -962,6 +967,7 @@ litest_remove_model_quirks(void)
 {
 	unlink(UDEV_MODEL_QUIRKS_RULE_FILE);
 	unlink(UDEV_MODEL_QUIRKS_HWDB_FILE);
+	unlink(UDEV_TEST_DEVICE_RULE_FILE);
 }
 
 static void
@@ -2551,6 +2557,7 @@ main(int argc, char **argv)
 	list_init(&all_tests);
 
 	setenv("CK_DEFAULT_TIMEOUT", "10", 0);
+	setenv("LIBINPUT_RUNNING_TEST_SUITE", "1", 1);
 
 	mode = litest_parse_argv(argc, argv);
 	if (mode == LITEST_MODE_ERROR)

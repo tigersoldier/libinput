@@ -1020,6 +1020,16 @@ close_restricted(struct libinput *libinput, int fd)
 	return libinput->interface->close_restricted(fd, libinput->user_data);
 }
 
+bool
+ignore_litest_test_suite_device(struct udev_device *device)
+{
+	if (!getenv("LIBINPUT_RUNNING_TEST_SUITE") &&
+	    udev_device_get_property_value(device, "LIBINPUT_TEST_DEVICE"))
+		return true;
+
+	return false;
+}
+
 void
 libinput_seat_init(struct libinput_seat *seat,
 		   struct libinput *libinput,
