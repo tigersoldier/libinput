@@ -264,26 +264,11 @@ tp_gesture_twofinger_handle_state_none(struct tp_dispatch *tp, uint64_t time)
 static enum tp_gesture_2fg_state
 tp_gesture_twofinger_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 {
-	struct normalized_coords normalized;
-	struct device_float_coords delta;
 	struct tp_touch *first = tp->gesture.touches[0],
 			*second = tp->gesture.touches[1];
 	int dir1, dir2;
 
-	delta = device_delta(first->point, second->point);
-	normalized = tp_normalize_delta(tp, delta);
-
-	/* If fingers are further than 3 cm apart assume pinch */
-	if (normalized_length(normalized) > TP_MM_TO_DPI_NORMALIZED(30)) {
-		tp_gesture_get_pinch_info(tp,
-					  &tp->gesture.initial_distance,
-					  &tp->gesture.angle,
-					  &tp->gesture.center);
-		tp->gesture.prev_scale = 1.0;
-		return GESTURE_2FG_STATE_PINCH;
-	}
-
-	/* Elif fingers have been close together for a while, scroll */
+	/* if fingers stay unmoving for a while, assume (slow) scroll */
 	if (time > (tp->gesture.initial_time + DEFAULT_GESTURE_2FG_SCROLL_TIMEOUT)) {
 		tp_gesture_set_scroll_buildup(tp);
 		return GESTURE_2FG_STATE_SCROLL;
