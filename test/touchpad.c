@@ -3165,6 +3165,7 @@ START_TEST(touchpad_thumb_tap_begin)
 	/* touch down is a thumb */
 	litest_touch_down_extended(dev, 0, 50, 99, axes);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 
 	litest_assert_empty_queue(li);
@@ -3172,6 +3173,7 @@ START_TEST(touchpad_thumb_tap_begin)
 	/* make sure normal tap still works */
 	litest_touch_down(dev, 0, 50, 99);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_BUTTON);
 }
@@ -3197,12 +3199,14 @@ START_TEST(touchpad_thumb_tap_touch)
 	litest_touch_down(dev, 0, 50, 50);
 	litest_touch_move_extended(dev, 0, 51, 99, axes);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	litest_assert_empty_queue(li);
 
 	/* make sure normal tap still works */
 	litest_touch_down(dev, 0, 50, 99);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_BUTTON);
 }
@@ -3226,6 +3230,7 @@ START_TEST(touchpad_thumb_tap_hold)
 
 	/* event in state HOLD is thumb */
 	litest_touch_down(dev, 0, 50, 99);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	libinput_dispatch(li);
 	litest_touch_move_extended(dev, 0, 51, 99, axes);
@@ -3235,6 +3240,7 @@ START_TEST(touchpad_thumb_tap_hold)
 	/* make sure normal tap still works */
 	litest_touch_down(dev, 0, 50, 99);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_BUTTON);
 }
@@ -3258,6 +3264,7 @@ START_TEST(touchpad_thumb_tap_hold_2ndfg)
 
 	/* event in state HOLD is thumb */
 	litest_touch_down(dev, 0, 50, 99);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	libinput_dispatch(li);
 	litest_touch_move_extended(dev, 0, 51, 99, axes);
@@ -3273,6 +3280,7 @@ START_TEST(touchpad_thumb_tap_hold_2ndfg)
 	litest_assert_empty_queue(li);
 
 	/* timeout -> into HOLD, no event on release */
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	libinput_dispatch(li);
 	litest_touch_up(dev, 1);
@@ -3281,6 +3289,7 @@ START_TEST(touchpad_thumb_tap_hold_2ndfg)
 	/* make sure normal tap still works */
 	litest_touch_down(dev, 0, 50, 99);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_BUTTON);
 }
@@ -3305,6 +3314,7 @@ START_TEST(touchpad_thumb_tap_hold_2ndfg_tap)
 
 	/* event in state HOLD is thumb */
 	litest_touch_down(dev, 0, 50, 99);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	libinput_dispatch(li);
 	litest_touch_move_extended(dev, 0, 51, 99, axes);
@@ -3328,6 +3338,7 @@ START_TEST(touchpad_thumb_tap_hold_2ndfg_tap)
 				       LIBINPUT_BUTTON_STATE_PRESSED);
 	libinput_event_destroy(libinput_event_pointer_get_base_event(ptrev));
 
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	libinput_dispatch(li);
 	event = libinput_get_event(li);
@@ -3339,6 +3350,7 @@ START_TEST(touchpad_thumb_tap_hold_2ndfg_tap)
 	/* make sure normal tap still works */
 	litest_touch_down(dev, 0, 50, 99);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 	litest_timeout_tap();
 	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_BUTTON);
 }
