@@ -806,6 +806,7 @@ START_TEST(touchpad_1fg_tap_n_drag_draglock_timeout)
 
 	litest_assert_empty_queue(li);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
 
 	litest_timeout_tapndrag();
 	litest_assert_button_event(li, BTN_LEFT,
