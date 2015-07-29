@@ -33,6 +33,7 @@
 #define DEFAULT_TRACKPOINT_ACTIVITY_TIMEOUT ms2us(300)
 #define DEFAULT_KEYBOARD_ACTIVITY_TIMEOUT_1 ms2us(200)
 #define DEFAULT_KEYBOARD_ACTIVITY_TIMEOUT_2 ms2us(500)
+#define THUMB_MOVE_TIMEOUT ms2us(300)
 #define FAKE_FINGER_OVERFLOW (1 << 7)
 
 static inline int
@@ -700,7 +701,7 @@ tp_thumb_detect(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
 		t->thumb.state = THUMB_STATE_YES;
 	else if (t->point.y > tp->thumb.lower_thumb_line &&
 		 tp->scroll.method != LIBINPUT_CONFIG_SCROLL_EDGE &&
-		 t->thumb.first_touch_time + 300 < time)
+		 t->thumb.first_touch_time + THUMB_MOVE_TIMEOUT < time)
 		t->thumb.state = THUMB_STATE_YES;
 
 	/* now what? we marked it as thumb, so:
