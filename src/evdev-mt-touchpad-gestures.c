@@ -157,7 +157,7 @@ tp_gesture_get_active_touches(struct tp_dispatch *tp,
 
 	memset(touches, 0, count * sizeof(struct tp_touch *));
 
-	for (i = 0; i < tp->num_slots; i++) {
+	for (i = 0; i < tp->ntouches; i++) {
 		t = &tp->touches[i];
 		if (tp_touch_active(tp, t)) {
 			touches[n++] = t;
