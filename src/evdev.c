@@ -1950,7 +1950,6 @@ evdev_configure_device(struct evdev_device *device)
 
 	if (udev_tags & EVDEV_UDEV_TAG_TOUCHPAD) {
 		device->dispatch = evdev_mt_touchpad_create(device);
-		device->seat_caps |= EVDEV_DEVICE_GESTURE;
 		log_info(libinput,
 			 "input device '%s', %s is a touchpad\n",
 			 device->devname, devnode);
