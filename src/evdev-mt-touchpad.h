@@ -246,6 +246,7 @@ struct tp_dispatch {
 	} accel;
 
 	struct {
+		bool enabled;
 		bool started;
 		unsigned int finger_count;
 		unsigned int finger_count_pending;

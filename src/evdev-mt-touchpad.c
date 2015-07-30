@@ -1918,7 +1918,8 @@ tp_init(struct tp_dispatch *tp,
 		return -1;
 
 	device->seat_caps |= EVDEV_DEVICE_POINTER;
-	device->seat_caps |= EVDEV_DEVICE_GESTURE;
+	if (tp->gesture.enabled)
+		device->seat_caps |= EVDEV_DEVICE_GESTURE;
 
 	return 0;
 }
