@@ -402,14 +402,12 @@ START_TEST(touchpad_scroll_defaults)
 
 	method = libinput_device_config_scroll_get_methods(device);
 	ck_assert(method & LIBINPUT_CONFIG_SCROLL_EDGE);
-	if (libevdev_get_num_slots(evdev) > 1 &&
-	    !litest_is_synaptics_semi_mt(dev))
+	if (libevdev_get_num_slots(evdev) > 1)
 		ck_assert(method & LIBINPUT_CONFIG_SCROLL_2FG);
 	else
 		ck_assert((method & LIBINPUT_CONFIG_SCROLL_2FG) == 0);
 
-	if (libevdev_get_num_slots(evdev) > 1 &&
-	    !litest_is_synaptics_semi_mt(dev))
+	if (libevdev_get_num_slots(evdev) > 1)
 		expected = LIBINPUT_CONFIG_SCROLL_2FG;
 	else
 		expected = LIBINPUT_CONFIG_SCROLL_EDGE;
@@ -425,8 +423,7 @@ START_TEST(touchpad_scroll_defaults)
 	status = libinput_device_config_scroll_set_method(device,
 					  LIBINPUT_CONFIG_SCROLL_2FG);
 
-	if (libevdev_get_num_slots(evdev) > 1 &&
-	    !litest_is_synaptics_semi_mt(dev))
+	if (libevdev_get_num_slots(evdev) > 1)
 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_SUCCESS);
 	else
 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_UNSUPPORTED);

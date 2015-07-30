@@ -1465,6 +1465,21 @@ tp_init_slots(struct tp_dispatch *tp,
 
 	tp->semi_mt = libevdev_has_property(device->evdev, INPUT_PROP_SEMI_MT);
 
+	/* This device has a terrible resolution when two fingers are down,
+	 * causing scroll jumps. The single-touch emulation ABS_X/Y is
+	 * accurate but the ABS_MT_POSITION touchpoints report the bounding
+	 * box and that causes jumps.  So we simply pretend it's a single
+	 * touch touchpad with the BTN_TOOL bits.
+	 * See https://bugzilla.redhat.com/show_bug.cgi?id=1235175 for an
+	 * explanation.
+	 */
+	if (tp->semi_mt &&
+	    (device->model_flags & EVDEV_MODEL_JUMPING_SEMI_MT)) {
+		tp->num_slots = 1;
+		tp->slot = 0;
+		tp->has_mt = false;
+	}
+
 	ARRAY_FOR_EACH(max_touches, m) {
 		if (libevdev_has_event_code(device->evdev,
 					    EV_KEY,
@@ -1526,11 +1541,7 @@ tp_scroll_get_methods(struct tp_dispatch *tp)
 {
 	uint32_t methods = LIBINPUT_CONFIG_SCROLL_EDGE;
 
-	/* some Synaptics semi-mt touchpads have a terrible 2fg resolution,
-	 * causing scroll jumps. For all other 2fg touchpads, we enable 2fg
-	 * scrolling */
-	if (tp->ntouches >= 2 &&
-	    (tp->device->model_flags & EVDEV_MODEL_JUMPING_SEMI_MT) == 0)
+	if (tp->ntouches >= 2)
 		methods |= LIBINPUT_CONFIG_SCROLL_2FG;
 
 	return methods;
