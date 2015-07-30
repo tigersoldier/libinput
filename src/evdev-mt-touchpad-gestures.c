@@ -565,7 +565,11 @@ tp_gesture_handle_state(struct tp_dispatch *tp, uint64_t time)
 int
 tp_init_gesture(struct tp_dispatch *tp)
 {
-	tp->gesture.enabled = true;
+	if (tp->device->model_flags & EVDEV_MODEL_JUMPING_SEMI_MT)
+		tp->gesture.enabled = false;
+	else
+		tp->gesture.enabled = true;
+
 	tp->gesture.twofinger_state = GESTURE_2FG_STATE_NONE;
 
 	libinput_timer_init(&tp->gesture.finger_count_switch_timer,
