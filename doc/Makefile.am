@@ -18,6 +18,7 @@ header_files = \
 	$(srcdir)/normalization-of-relative-motion.dox \
 	$(srcdir)/palm-detection.dox \
 	$(srcdir)/page-hierarchy.dox \
+	$(srcdir)/reporting-bugs.dox \
 	$(srcdir)/scrolling.dox \
 	$(srcdir)/seats.dox \
 	$(srcdir)/t440-support.dox \
