@@ -189,8 +189,10 @@ tp_gesture_get_direction(struct tp_dispatch *tp, struct tp_touch *touch)
 	/*
 	 * Semi-mt touchpads have somewhat inaccurate coordinates when
 	 * 2 fingers are down, so use a slightly larger threshold.
+	 * Elantech semi-mt touchpads are accurate enough though.
 	 */
-	if (tp->semi_mt)
+	if (tp->semi_mt &&
+	    (tp->device->model_flags & EVDEV_MODEL_ELANTECH_TOUCHPAD) == 0)
 		move_threshold = TP_MM_TO_DPI_NORMALIZED(4);
 	else
 		move_threshold = TP_MM_TO_DPI_NORMALIZED(2);

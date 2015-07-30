@@ -106,6 +106,7 @@ enum evdev_device_model {
 	EVDEV_MODEL_ALPS_TOUCHPAD = (1 << 8),
 	EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD = (1 << 9),
 	EVDEV_MODEL_JUMPING_SEMI_MT = (1 << 10),
+	EVDEV_MODEL_ELANTECH_TOUCHPAD = (1 << 11),
 };
 
 struct mt_slot {
