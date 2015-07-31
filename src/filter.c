@@ -493,8 +493,8 @@ touchpad_lenovo_x230_accel_profile(struct motion_filter *filter,
 
 	speed_in *= TP_MAGIC_SLOWDOWN / TP_MAGIC_LOW_RES_FACTOR;
 
-	s1 = min(1, speed_in * 5);
-	s2 = 1 + (speed_in - threshold) * incline;
+	s1 = min(1, speed_in * 5 * 1000.0);
+	s2 = 1 + (speed_in  * 1000.0 - threshold * 1000.0) * incline;
 
 	speed_out = min(max_accel, s2 > 1 ? s2 : s1);
 
