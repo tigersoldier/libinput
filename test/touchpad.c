@@ -2215,6 +2215,8 @@ START_TEST(touchpad_initial_state)
 	litest_touch_down(dev, 0, x, y);
 	litest_touch_move_to(dev, 0, x, y, 80, 80, 10, 1);
 	litest_touch_up(dev, 0);
+	libinput_dispatch(libinput1);
+	libinput_dispatch(libinput2);
 
 	litest_wait_for_event(libinput1);
 	litest_wait_for_event(libinput2);
