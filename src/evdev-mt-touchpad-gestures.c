@@ -189,8 +189,10 @@ tp_gesture_get_direction(struct tp_dispatch *tp, struct tp_touch *touch)
 	/*
 	 * Semi-mt touchpads have somewhat inaccurate coordinates when
 	 * 2 fingers are down, so use a slightly larger threshold.
+	 * Elantech semi-mt touchpads are accurate enough though.
 	 */
-	if (tp->semi_mt)
+	if (tp->semi_mt &&
+	    (tp->device->model_flags & EVDEV_MODEL_ELANTECH_TOUCHPAD) == 0)
 		move_threshold = TP_MM_TO_DPI_NORMALIZED(4);
 	else
 		move_threshold = TP_MM_TO_DPI_NORMALIZED(2);
@@ -295,7 +297,7 @@ tp_gesture_twofinger_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 	    ((dir2 & 0x80) && (dir1 & 0x01))) {
 		tp_gesture_set_scroll_buildup(tp);
 		return GESTURE_2FG_STATE_SCROLL;
-	} else {
+	} else if (tp->gesture.enabled) {
 		tp_gesture_get_pinch_info(tp,
 					  &tp->gesture.initial_distance,
 					  &tp->gesture.angle,
@@ -303,6 +305,8 @@ tp_gesture_twofinger_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 		tp->gesture.prev_scale = 1.0;
 		return GESTURE_2FG_STATE_PINCH;
 	}
+
+	return GESTURE_2FG_STATE_UNKNOWN;
 }
 
 static enum tp_gesture_2fg_state
@@ -563,6 +567,11 @@ tp_gesture_handle_state(struct tp_dispatch *tp, uint64_t time)
 int
 tp_init_gesture(struct tp_dispatch *tp)
 {
+	if (tp->device->model_flags & EVDEV_MODEL_JUMPING_SEMI_MT)
+		tp->gesture.enabled = false;
+	else
+		tp->gesture.enabled = true;
+
 	tp->gesture.twofinger_state = GESTURE_2FG_STATE_NONE;
 
 	libinput_timer_init(&tp->gesture.finger_count_switch_timer,

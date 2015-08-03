@@ -32,75 +32,6 @@
 #include "libinput-util.h"
 #include "litest.h"
 
-static bool
-has_2fg_scroll(struct litest_device *dev)
-{
-	struct libinput_device *device = dev->libinput_device;
-
-	return !!(libinput_device_config_scroll_get_methods(device) &
-		  LIBINPUT_CONFIG_SCROLL_2FG);
-}
-
-static void
-enable_2fg_scroll(struct litest_device *dev)
-{
-	enum libinput_config_status status, expected;
-	struct libinput_device *device = dev->libinput_device;
-
-	status = libinput_device_config_scroll_set_method(device,
-					  LIBINPUT_CONFIG_SCROLL_2FG);
-
-	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
-	litest_assert_int_eq(status, expected);
-}
-
-static void
-enable_edge_scroll(struct litest_device *dev)
-{
-	enum libinput_config_status status, expected;
-	struct libinput_device *device = dev->libinput_device;
-
-	status = libinput_device_config_scroll_set_method(device,
-					  LIBINPUT_CONFIG_SCROLL_EDGE);
-
-	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
-	litest_assert_int_eq(status, expected);
-}
-
-static void
-enable_clickfinger(struct litest_device *dev)
-{
-	enum libinput_config_status status, expected;
-	struct libinput_device *device = dev->libinput_device;
-
-	status = libinput_device_config_click_set_method(device,
-				 LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER);
-	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
-	litest_assert_int_eq(status, expected);
-}
-
-static void
-enable_buttonareas(struct litest_device *dev)
-{
-	enum libinput_config_status status, expected;
-	struct libinput_device *device = dev->libinput_device;
-
-	status = libinput_device_config_click_set_method(device,
-				 LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS);
-	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
-	litest_assert_int_eq(status, expected);
-}
-
-static inline int
-is_synaptics_semi_mt(struct litest_device *dev)
-{
-	struct libevdev *evdev = dev->evdev;
-
-	return libevdev_has_property(evdev, INPUT_PROP_SEMI_MT) &&
-		libevdev_get_id_vendor(evdev) == 0x2 &&
-		libevdev_get_id_product(evdev) == 0x7;
-}
-
 START_TEST(touchpad_1fg_motion)
 {
 	struct litest_device *dev = litest_current_device();
@@ -192,10 +123,10 @@ START_TEST(touchpad_2fg_scroll)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!has_2fg_scroll(dev))
+	if (!litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	test_2fg_scroll(dev, 0.1, 40, 0);
@@ -222,7 +153,7 @@ START_TEST(touchpad_2fg_scroll_slow_distance)
 	const struct input_absinfo *y;
 	double y_move;
 
-	if (!has_2fg_scroll(dev))
+	if (!litest_has_2fg_scroll(dev))
 		return;
 
 	/* We want to move > 5 mm. */
@@ -234,7 +165,7 @@ START_TEST(touchpad_2fg_scroll_slow_distance)
 		y_move = 20.0;
 	}
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 49, 50);
@@ -279,10 +210,10 @@ START_TEST(touchpad_2fg_scroll_source)
 	struct libinput_event *event;
 	struct libinput_event_pointer *ptrev;
 
-	if (!has_2fg_scroll(dev))
+	if (!litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	test_2fg_scroll(dev, 0, 30, 0);
@@ -304,10 +235,10 @@ START_TEST(touchpad_2fg_scroll_semi_mt)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!has_2fg_scroll(dev))
+	if (!litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 20, 20);
@@ -328,10 +259,10 @@ START_TEST(touchpad_2fg_scroll_return_to_motion)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!has_2fg_scroll(dev))
+	if (!litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	/* start with motion */
@@ -399,10 +330,10 @@ START_TEST(touchpad_scroll_natural_2fg)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	if (!has_2fg_scroll(dev))
+	if (!litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 	litest_drain_events(li);
 
 	libinput_device_config_scroll_set_natural_scroll_enabled(dev->libinput_device, 1);
@@ -425,7 +356,7 @@ START_TEST(touchpad_edge_scroll)
 	struct libinput *li = dev->libinput;
 
 	litest_drain_events(li);
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 
 	litest_touch_down(dev, 0, 99, 20);
 	litest_touch_move_to(dev, 0, 99, 20, 99, 80, 10, 0);
@@ -471,14 +402,12 @@ START_TEST(touchpad_scroll_defaults)
 
 	method = libinput_device_config_scroll_get_methods(device);
 	ck_assert(method & LIBINPUT_CONFIG_SCROLL_EDGE);
-	if (libevdev_get_num_slots(evdev) > 1 &&
-	    !is_synaptics_semi_mt(dev))
+	if (libevdev_get_num_slots(evdev) > 1)
 		ck_assert(method & LIBINPUT_CONFIG_SCROLL_2FG);
 	else
 		ck_assert((method & LIBINPUT_CONFIG_SCROLL_2FG) == 0);
 
-	if (libevdev_get_num_slots(evdev) > 1 &&
-	    !is_synaptics_semi_mt(dev))
+	if (libevdev_get_num_slots(evdev) > 1)
 		expected = LIBINPUT_CONFIG_SCROLL_2FG;
 	else
 		expected = LIBINPUT_CONFIG_SCROLL_EDGE;
@@ -494,8 +423,7 @@ START_TEST(touchpad_scroll_defaults)
 	status = libinput_device_config_scroll_set_method(device,
 					  LIBINPUT_CONFIG_SCROLL_2FG);
 
-	if (libevdev_get_num_slots(evdev) > 1 &&
-	    !is_synaptics_semi_mt(dev))
+	if (libevdev_get_num_slots(evdev) > 1)
 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_SUCCESS);
 	else
 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_UNSUPPORTED);
@@ -522,7 +450,7 @@ START_TEST(touchpad_edge_scroll_timeout)
 	}
 
 	litest_drain_events(li);
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 
 	litest_touch_down(dev, 0, 99, 20);
 	libinput_dispatch(li);
@@ -568,7 +496,7 @@ START_TEST(touchpad_edge_scroll_no_motion)
 	struct libinput *li = dev->libinput;
 
 	litest_drain_events(li);
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 
 	litest_touch_down(dev, 0, 99, 10);
 	litest_touch_move_to(dev, 0, 99, 10, 99, 70, 10, 0);
@@ -590,7 +518,7 @@ START_TEST(touchpad_edge_scroll_no_edge_after_motion)
 	struct libinput *li = dev->libinput;
 
 	litest_drain_events(li);
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 
 	/* moving into the edge zone must not trigger scroll events */
 	litest_touch_down(dev, 0, 20, 20);
@@ -612,7 +540,7 @@ START_TEST(touchpad_edge_scroll_source)
 	struct libinput_event_pointer *ptrev;
 
 	litest_drain_events(li);
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 
 	litest_touch_down(dev, 0, 99, 20);
 	litest_touch_move_to(dev, 0, 99, 20, 99, 80, 10, 0);
@@ -637,7 +565,7 @@ START_TEST(touchpad_edge_scroll_no_2fg)
 	struct libinput *li = dev->libinput;
 
 	litest_drain_events(li);
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 
 	litest_touch_down(dev, 0, 49, 50);
 	litest_touch_down(dev, 1, 51, 50);
@@ -656,8 +584,8 @@ START_TEST(touchpad_edge_scroll_into_buttonareas)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	enable_buttonareas(dev);
-	enable_edge_scroll(dev);
+	litest_enable_buttonareas(dev);
+	litest_enable_edge_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 99, 40);
@@ -682,8 +610,8 @@ START_TEST(touchpad_edge_scroll_within_buttonareas)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	enable_buttonareas(dev);
-	enable_edge_scroll(dev);
+	litest_enable_buttonareas(dev);
+	litest_enable_edge_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 20, 99);
@@ -710,8 +638,8 @@ START_TEST(touchpad_edge_scroll_buttonareas_click_stops_scroll)
 	struct libinput_event_pointer *ptrev;
 	double val;
 
-	enable_buttonareas(dev);
-	enable_edge_scroll(dev);
+	litest_enable_buttonareas(dev);
+	litest_enable_edge_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 20, 95);
@@ -757,8 +685,8 @@ START_TEST(touchpad_edge_scroll_clickfinger_click_stops_scroll)
 	struct libinput_event_pointer *ptrev;
 	double val;
 
-	enable_clickfinger(dev);
-	enable_edge_scroll(dev);
+	litest_enable_clickfinger(dev);
+	litest_enable_edge_scroll(dev);
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 20, 95);
@@ -802,7 +730,7 @@ START_TEST(touchpad_edge_scroll_into_area)
 	struct litest_device *dev = litest_current_device();
 	struct libinput *li = dev->libinput;
 
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 	litest_drain_events(li);
 
 	/* move into area, move vertically, move back to edge */
@@ -846,10 +774,10 @@ START_TEST(touchpad_palm_detect_at_edge)
 	struct libinput *li = dev->libinput;
 
 	if (!touchpad_has_palm_detect_size(dev) ||
-	    !has_2fg_scroll(dev))
+	    !litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -875,7 +803,7 @@ START_TEST(touchpad_no_palm_detect_at_edge_for_edge_scrolling)
 	if (!touchpad_has_palm_detect_size(dev))
 		return;
 
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 
 	litest_drain_events(li);
 
@@ -893,10 +821,10 @@ START_TEST(touchpad_palm_detect_at_bottom_corners)
 	struct libinput *li = dev->libinput;
 
 	if (!touchpad_has_palm_detect_size(dev) ||
-	    !has_2fg_scroll(dev))
+	    !litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -922,10 +850,10 @@ START_TEST(touchpad_palm_detect_at_top_corners)
 	struct libinput *li = dev->libinput;
 
 	if (!touchpad_has_palm_detect_size(dev) ||
-	    !has_2fg_scroll(dev))
+	    !litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -951,10 +879,10 @@ START_TEST(touchpad_palm_detect_palm_stays_palm)
 	struct libinput *li = dev->libinput;
 
 	if (!touchpad_has_palm_detect_size(dev) ||
-	    !has_2fg_scroll(dev))
+	    !litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -973,10 +901,10 @@ START_TEST(touchpad_palm_detect_palm_becomes_pointer)
 	struct libinput *li = dev->libinput;
 
 	if (!touchpad_has_palm_detect_size(dev) ||
-	    !has_2fg_scroll(dev))
+	    !litest_has_2fg_scroll(dev))
 		return;
 
-	enable_2fg_scroll(dev);
+	litest_enable_2fg_scroll(dev);
 
 	litest_disable_tap(dev->libinput_device);
 
@@ -2573,7 +2501,7 @@ START_TEST(touchpad_dwt_edge_scroll)
 	if (!has_disable_while_typing(touchpad))
 		return;
 
-	enable_edge_scroll(touchpad);
+	litest_enable_edge_scroll(touchpad);
 
 	keyboard = litest_add_device(li, LITEST_KEYBOARD);
 	litest_drain_events(li);
@@ -2620,7 +2548,7 @@ START_TEST(touchpad_dwt_edge_scroll_interrupt)
 	if (!has_disable_while_typing(touchpad))
 		return;
 
-	enable_edge_scroll(touchpad);
+	litest_enable_edge_scroll(touchpad);
 
 	keyboard = litest_add_device(li, LITEST_KEYBOARD);
 	litest_drain_events(li);
@@ -2979,7 +2907,7 @@ START_TEST(touchpad_thumb_update_no_motion)
 	};
 
 	litest_disable_tap(dev->libinput_device);
-	enable_clickfinger(dev);
+	litest_enable_clickfinger(dev);
 
 	if (!has_thumb_detect(dev))
 		return;
@@ -3005,7 +2933,7 @@ START_TEST(touchpad_thumb_moving)
 	};
 
 	litest_disable_tap(dev->libinput_device);
-	enable_clickfinger(dev);
+	litest_enable_clickfinger(dev);
 
 	if (!has_thumb_detect(dev))
 		return;
@@ -3129,7 +3057,7 @@ START_TEST(touchpad_thumb_edgescroll)
 	if (!has_thumb_detect(dev))
 		return;
 
-	enable_edge_scroll(dev);
+	litest_enable_edge_scroll(dev);
 	litest_disable_tap(dev->libinput_device);
 
 	litest_drain_events(li);
@@ -3161,7 +3089,7 @@ START_TEST(touchpad_thumb_tap_begin)
 		return;
 
 	litest_enable_tap(dev->libinput_device);
-	enable_clickfinger(dev);
+	litest_enable_clickfinger(dev);
 	litest_drain_events(li);
 
 	/* touch down is a thumb */
@@ -3194,7 +3122,7 @@ START_TEST(touchpad_thumb_tap_touch)
 		return;
 
 	litest_enable_tap(dev->libinput_device);
-	enable_clickfinger(dev);
+	litest_enable_clickfinger(dev);
 	litest_drain_events(li);
 
 	/* event after touch down is thumb */
@@ -3227,7 +3155,7 @@ START_TEST(touchpad_thumb_tap_hold)
 		return;
 
 	litest_enable_tap(dev->libinput_device);
-	enable_clickfinger(dev);
+	litest_enable_clickfinger(dev);
 	litest_drain_events(li);
 
 	/* event in state HOLD is thumb */
@@ -3261,7 +3189,7 @@ START_TEST(touchpad_thumb_tap_hold_2ndfg)
 		return;
 
 	litest_enable_tap(dev->libinput_device);
-	enable_clickfinger(dev);
+	litest_enable_clickfinger(dev);
 	litest_drain_events(li);
 
 	/* event in state HOLD is thumb */
@@ -3370,7 +3298,7 @@ START_TEST(touchpad_tool_tripletap_touch_count)
 	 * https://bugs.freedesktop.org/show_bug.cgi?id=91352
 	 */
 	litest_drain_events(li);
-	enable_clickfinger(dev);
+	litest_enable_clickfinger(dev);
 
 	/* touch 1 down */
 	litest_event(dev, EV_ABS, ABS_MT_SLOT, 0);

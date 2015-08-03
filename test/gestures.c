@@ -34,8 +34,12 @@ START_TEST(gestures_cap)
 	struct litest_device *dev = litest_current_device();
 	struct libinput_device *device = dev->libinput_device;
 
-	ck_assert(libinput_device_has_capability(device,
-						 LIBINPUT_DEVICE_CAP_GESTURE));
+	if (litest_is_synaptics_semi_mt(dev))
+		ck_assert(!libinput_device_has_capability(device,
+					  LIBINPUT_DEVICE_CAP_GESTURE));
+	else
+		ck_assert(libinput_device_has_capability(device,
+					 LIBINPUT_DEVICE_CAP_GESTURE));
 }
 END_TEST
 
