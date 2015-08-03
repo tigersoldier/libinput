@@ -24,7 +24,8 @@ header_files = \
 	$(srcdir)/t440-support.dox \
 	$(srcdir)/tapping.dox \
 	$(srcdir)/test-suite.dox \
-	$(srcdir)/tools.dox
+	$(srcdir)/tools.dox \
+	$(srcdir)/touchpads.dox
 
 diagram_files = \
 	$(srcdir)/dot/seats-sketch.gv \
