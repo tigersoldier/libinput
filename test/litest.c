@@ -1834,12 +1834,17 @@ litest_print_event(struct libinput_event *event)
 		break;
 	case LIBINPUT_EVENT_POINTER_AXIS:
 		p = libinput_event_get_pointer_event(event);
-		fprintf(stderr,
-			"vert %.f horiz %.2f",
-			libinput_event_pointer_get_axis_value(p,
-				LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL),
-			libinput_event_pointer_get_axis_value(p,
-				LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL));
+		x = 0.0;
+		y = 0.0;
+		if (libinput_event_pointer_has_axis(p,
+				LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+			y = libinput_event_pointer_get_axis_value(p,
+				LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+		if (libinput_event_pointer_has_axis(p,
+				LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+			x = libinput_event_pointer_get_axis_value(p,
+				LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+		fprintf(stderr, "vert %.f horiz %.2f", y, x);
 		break;
 	default:
 		break;
