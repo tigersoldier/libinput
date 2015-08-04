@@ -78,6 +78,7 @@ filter_get_speed(struct motion_filter *filter)
  */
 
 #define DEFAULT_THRESHOLD 0.4			/* in units/ms */
+#define MINIMUM_THRESHOLD 0.2			/* in units/ms */
 #define DEFAULT_ACCELERATION 2.0		/* unitless factor */
 #define DEFAULT_INCLINE 1.1			/* unitless factor */
 
@@ -333,9 +334,9 @@ accelerator_set_speed(struct motion_filter *filter,
 	assert(speed >= -1.0 && speed <= 1.0);
 
 	/* delay when accel kicks in */
-	accel_filter->threshold = DEFAULT_THRESHOLD - speed / 4000.0;
-	if (accel_filter->threshold < 0.0002)
-		accel_filter->threshold = 0.0002;
+	accel_filter->threshold = DEFAULT_THRESHOLD - speed / 4.0;
+	if (accel_filter->threshold < MINIMUM_THRESHOLD)
+		accel_filter->threshold = MINIMUM_THRESHOLD;
 
 	/* adjust max accel factor */
 	accel_filter->accel = DEFAULT_ACCELERATION + speed * 1.5;
