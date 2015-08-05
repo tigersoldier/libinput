@@ -2146,6 +2146,7 @@ evdev_device_create(struct libinput_seat *seat,
 	device->pending_event = EVDEV_NONE;
 	device->devname = libevdev_get_name(device->evdev);
 	device->scroll.threshold = 5.0; /* Default may be overridden */
+	device->scroll.direction_lock_threshold = 5.0; /* Default may be overridden */
 	device->scroll.direction = 0;
 	device->scroll.wheel_click_angle =
 		evdev_read_wheel_click_prop(device);
@@ -2414,12 +2415,12 @@ evdev_post_scroll(struct evdev_device *device,
 	   trigger speed to start scrolling in the other direction */
 	} else if (!evdev_is_scrolling(device,
 			       LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)) {
-		if (fabs(delta->y) >= device->scroll.threshold)
+		if (fabs(delta->y) >= device->scroll.direction_lock_threshold)
 			evdev_start_scrolling(device,
 				      LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
 	} else if (!evdev_is_scrolling(device,
 				LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)) {
-		if (fabs(delta->x) >= device->scroll.threshold)
+		if (fabs(delta->x) >= device->scroll.direction_lock_threshold)
 			evdev_start_scrolling(device,
 				      LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
 	}

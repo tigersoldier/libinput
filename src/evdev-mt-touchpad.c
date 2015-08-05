@@ -1628,8 +1628,9 @@ tp_init_scroll(struct tp_dispatch *tp, struct evdev_device *device)
 	tp->scroll.method = tp_scroll_get_default_method(tp);
 	tp->device->base.config.scroll_method = &tp->scroll.config_method;
 
-	/* In mm for touchpads with valid resolution, see tp_init_accel() */
-	tp->device->scroll.threshold = 5.0;
+	 /* In mm for touchpads with valid resolution, see tp_init_accel() */
+	tp->device->scroll.threshold = 0.0;
+	tp->device->scroll.direction_lock_threshold = 5.0;
 
 	return 0;
 }
