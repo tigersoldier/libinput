@@ -60,13 +60,22 @@ PKG_PROG_PKG_CONFIG()
 PKG_CHECK_MODULES(MTDEV, [mtdev >= 1.1.0])
 PKG_CHECK_MODULES(LIBUDEV, [libudev])
 PKG_CHECK_MODULES(LIBEVDEV, [libevdev >= 0.4])
-PKG_CHECK_MODULES(LIBUNWIND,
+
+AC_ARG_WITH(libunwind,
+            AS_HELP_STRING([--without-libunwind],[Do not use libunwind]))
+
+AS_IF([test "x$with_libunwind" != "xno"],
+	[PKG_CHECK_MODULES(LIBUNWIND,
 		  [libunwind],
 		  [HAVE_LIBUNWIND=yes],
-		  [HAVE_LIBUNWIND=no])
-if test "x$HAVE_LIBUNWIND" = "xyes"; then
-	AC_DEFINE(HAVE_LIBUNWIND, 1, [Have libunwind support])
-fi
+		  [HAVE_LIBUNWIND=no])],
+	[HAVE_LIBUNWIND=no])
+
+AS_IF([test "x$HAVE_LIBUNWIND" = "xyes"],
+	[AC_DEFINE(HAVE_LIBUNWIND, 1, [Have libunwind support])],
+	[AS_IF([test "x$with_libunwind" = "xyes"],
+		[AC_MSG_ERROR([libunwind requested but not found])])])
+
 AM_CONDITIONAL(HAVE_LIBUNWIND, [test "x$HAVE_LIBUNWIND" = xyes])
 AC_PATH_PROG(ADDR2LINE, [addr2line])
 if test "x$ADDR2LINE" != "x"; then
