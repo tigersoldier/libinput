@@ -420,6 +420,19 @@ accelerator_filter_x230(struct motion_filter *filter,
 	return accelerated;
 }
 
+static struct normalized_coords
+touchpad_constant_filter(struct motion_filter *filter,
+			 const struct normalized_coords *unaccelerated,
+			 void *data, uint64_t time)
+{
+	struct normalized_coords normalized;
+
+	normalized.x = TP_MAGIC_SLOWDOWN * unaccelerated->x;
+	normalized.y = TP_MAGIC_SLOWDOWN * unaccelerated->y;
+
+	return normalized;
+}
+
 static void
 accelerator_restart(struct motion_filter *filter,
 		    void *data,
@@ -757,6 +770,14 @@ create_pointer_accelerator_filter_linear_low_dpi(int dpi)
 	return &filter->base;
 }
 
+struct motion_filter_interface accelerator_interface_touchpad = {
+	.filter = accelerator_filter,
+	.filter_constant = touchpad_constant_filter,
+	.restart = accelerator_restart,
+	.destroy = accelerator_destroy,
+	.set_speed = accelerator_set_speed,
+};
+
 struct motion_filter *
 create_pointer_accelerator_filter_touchpad(int dpi)
 {
@@ -766,7 +787,7 @@ create_pointer_accelerator_filter_touchpad(int dpi)
 	if (!filter)
 		return NULL;
 
-	filter->base.interface = &accelerator_interface;
+	filter->base.interface = &accelerator_interface_touchpad;
 	filter->profile = touchpad_accel_profile_linear;
 
 	return &filter->base;

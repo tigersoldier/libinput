@@ -71,6 +71,18 @@ tp_filter_motion(struct tp_dispatch *tp,
 			       unaccelerated, tp, time);
 }
 
+struct normalized_coords
+tp_filter_motion_unaccelerated(struct tp_dispatch *tp,
+			       const struct normalized_coords *unaccelerated,
+			       uint64_t time)
+{
+	if (normalized_is_zero(*unaccelerated))
+		return *unaccelerated;
+
+	return filter_dispatch_constant(tp->device->pointer.filter,
+					unaccelerated, tp, time);
+}
+
 static inline void
 tp_motion_history_push(struct tp_touch *t)
 {
