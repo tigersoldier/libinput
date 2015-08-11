@@ -612,7 +612,7 @@ evdev_process_absolute_motion(struct evdev_device *device,
 	}
 }
 
-static void
+void
 evdev_notify_axis(struct evdev_device *device,
 		  uint64_t time,
 		  uint32_t axes,

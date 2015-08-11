@@ -342,7 +342,7 @@ tp_edge_scroll_handle_state(struct tp_dispatch *tp, uint64_t time)
 int
 tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 {
-	struct libinput_device *device = &tp->device->base;
+	struct evdev_device *device = tp->device;
 	struct tp_touch *t;
 	enum libinput_pointer_axis axis;
 	double *delta;
@@ -369,7 +369,7 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 			case EDGE_NONE:
 				if (t->scroll.direction != -1) {
 					/* Send stop scroll event */
-					pointer_notify_axis(device, time,
+					evdev_notify_axis(device, time,
 						AS_MASK(t->scroll.direction),
 						LIBINPUT_POINTER_AXIS_SOURCE_FINGER,
 						&zero,
@@ -395,7 +395,7 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 		switch (t->scroll.edge_state) {
 		case EDGE_SCROLL_TOUCH_STATE_NONE:
 		case EDGE_SCROLL_TOUCH_STATE_AREA:
-			log_bug_libinput(device->seat->libinput,
+			log_bug_libinput(tp_libinput_context(tp),
 					 "unexpected scroll state %d\n",
 					 t->scroll.edge_state);
 			break;
@@ -416,11 +416,11 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 		if (*delta == 0.0)
 			continue;
 
-		pointer_notify_axis(device, time,
-				    AS_MASK(axis),
-				    LIBINPUT_POINTER_AXIS_SOURCE_FINGER,
-				    &normalized,
-				    &zero_discrete);
+		evdev_notify_axis(device, time,
+				  AS_MASK(axis),
+				  LIBINPUT_POINTER_AXIS_SOURCE_FINGER,
+				  &normalized,
+				  &zero_discrete);
 		t->scroll.direction = axis;
 
 		tp_edge_scroll_handle_event(tp, t, SCROLL_EVENT_POSTED);
@@ -432,14 +432,14 @@ tp_edge_scroll_post_events(struct tp_dispatch *tp, uint64_t time)
 void
 tp_edge_scroll_stop_events(struct tp_dispatch *tp, uint64_t time)
 {
-	struct libinput_device *device = &tp->device->base;
+	struct evdev_device *device = tp->device;
 	struct tp_touch *t;
 	const struct normalized_coords zero = { 0.0, 0.0 };
 	const struct discrete_coords zero_discrete = { 0.0, 0.0 };
 
 	tp_for_each_touch(tp, t) {
 		if (t->scroll.direction != -1) {
-			pointer_notify_axis(device, time,
+			evdev_notify_axis(device, time,
 					    AS_MASK(t->scroll.direction),
 					    LIBINPUT_POINTER_AXIS_SOURCE_FINGER,
 					    &zero,

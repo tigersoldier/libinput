@@ -381,6 +381,13 @@ void
 evdev_init_natural_scroll(struct evdev_device *device);
 
 void
+evdev_notify_axis(struct evdev_device *device,
+		  uint64_t time,
+		  uint32_t axes,
+		  enum libinput_pointer_axis_source source,
+		  const struct normalized_coords *delta_in,
+		  const struct discrete_coords *discrete_in);
+void
 evdev_post_scroll(struct evdev_device *device,
 		  uint64_t time,
 		  enum libinput_pointer_axis_source source,
