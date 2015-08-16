@@ -57,9 +57,22 @@ typedef double (*accel_profile_func_t)(struct motion_filter *filter,
 				       double velocity,
 				       uint64_t time);
 
+/* Pointer acceleration types */
+
 struct motion_filter *
-create_pointer_accelerator_filter(accel_profile_func_t filter,
-				  int dpi);
+create_pointer_accelerator_filter_linear(int dpi);
+
+struct motion_filter *
+create_pointer_accelerator_filter_linear_low_dpi(int dpi);
+
+struct motion_filter *
+create_pointer_accelerator_filter_touchpad(int dpi);
+
+struct motion_filter *
+create_pointer_accelerator_filter_lenovo_x230(int dpi);
+
+struct motion_filter *
+create_pointer_accelerator_filter_trackpoint(int dpi);
 
 /*
  * Pointer acceleration profiles.
@@ -85,4 +98,9 @@ touchpad_lenovo_x230_accel_profile(struct motion_filter *filter,
 				      void *data,
 				      double speed_in,
 				      uint64_t time);
+double
+trackpoint_accel_profile(struct motion_filter *filter,
+			 void *data,
+			 double speed_in,
+			 uint64_t time);
 #endif /* FILTER_H */
