@@ -36,6 +36,12 @@
 #include "libinput-util.h"
 #include "filter-private.h"
 
+/* Once normalized, touchpads see the same acceleration as mice. that is
+ * technically correct but subjectively wrong, we expect a touchpad to be a
+ * lot slower than a mouse. Apply a magic factor to slow down all movements
+ */
+#define TP_MAGIC_SLOWDOWN 0.4 /* unitless factor */
+
 /* Convert speed/velocity from units/us to units/ms */
 static inline double
 v_us2ms(double units_per_us)
@@ -581,12 +587,6 @@ touchpad_accel_profile_linear(struct motion_filter *filter,
                               double speed_in, /* units/us */
                               uint64_t time)
 {
-	/* Once normalized, touchpads see the same
-	   acceleration as mice. that is technically correct but
-	   subjectively wrong, we expect a touchpad to be a lot
-	   slower than a mouse. Apply a magic factor here and proceed
-	   as normal.  */
-	const double TP_MAGIC_SLOWDOWN = 0.4; /* unitless */
 	double factor; /* unitless */
 
 	speed_in *= TP_MAGIC_SLOWDOWN;
@@ -603,7 +603,7 @@ touchpad_lenovo_x230_accel_profile(struct motion_filter *filter,
 				      uint64_t time)
 {
 	/* Keep the magic factor from touchpad_accel_profile_linear.  */
-	const double TP_MAGIC_SLOWDOWN = 0.4; /* unitless */
+	const double X230_MAGIC_SLOWDOWN = 0.4; /* unitless */
 
 	/* Those touchpads presents an actual lower resolution that what is
 	 * advertised. We see some jumps from the cursor due to the big steps
@@ -629,14 +629,14 @@ touchpad_lenovo_x230_accel_profile(struct motion_filter *filter,
 	 * pointer_accel_profile_linear(), look at the git history of that
 	 * function for an explaination of what the min/max/etc. does.
 	 */
-	speed_in *= TP_MAGIC_SLOWDOWN / TP_MAGIC_LOW_RES_FACTOR;
+	speed_in *= X230_MAGIC_SLOWDOWN / TP_MAGIC_LOW_RES_FACTOR;
 
 	f1 = min(1, v_us2ms(speed_in) * 5);
 	f2 = 1 + (v_us2ms(speed_in) - v_us2ms(threshold)) * incline;
 
 	factor = min(max_accel, f2 > 1 ? f2 : f1);
 
-	return factor * TP_MAGIC_SLOWDOWN / TP_MAGIC_LOW_RES_FACTOR;
+	return factor * X230_MAGIC_SLOWDOWN / TP_MAGIC_LOW_RES_FACTOR;
 }
 
 double
