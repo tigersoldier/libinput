@@ -672,10 +672,10 @@ trackpoint_accel_profile(struct motion_filter *filter,
 }
 
 struct motion_filter_interface accelerator_interface = {
-	accelerator_filter,
-	accelerator_restart,
-	accelerator_destroy,
-	accelerator_set_speed,
+	.filter = accelerator_filter,
+	.restart = accelerator_restart,
+	.destroy = accelerator_destroy,
+	.set_speed = accelerator_set_speed,
 };
 
 static struct pointer_accelerator *
@@ -718,10 +718,10 @@ create_pointer_accelerator_filter_linear(int dpi)
 }
 
 struct motion_filter_interface accelerator_interface_low_dpi = {
-	accelerator_filter_low_dpi,
-	accelerator_restart,
-	accelerator_destroy,
-	accelerator_set_speed,
+	.filter = accelerator_filter_low_dpi,
+	.restart = accelerator_restart,
+	.destroy = accelerator_destroy,
+	.set_speed = accelerator_set_speed,
 };
 
 struct motion_filter *
@@ -755,10 +755,10 @@ create_pointer_accelerator_filter_touchpad(int dpi)
 }
 
 struct motion_filter_interface accelerator_interface_x230 = {
-	accelerator_filter_x230,
-	accelerator_restart,
-	accelerator_destroy,
-	accelerator_set_speed,
+	.filter = accelerator_filter_x230,
+	.restart = accelerator_restart,
+	.destroy = accelerator_destroy,
+	.set_speed = accelerator_set_speed,
 };
 
 /* The Lenovo x230 has a bad touchpad. This accel method has been
@@ -792,10 +792,10 @@ create_pointer_accelerator_filter_lenovo_x230(int dpi)
 }
 
 struct motion_filter_interface accelerator_interface_trackpoint = {
-	accelerator_filter_trackpoint,
-	accelerator_restart,
-	accelerator_destroy,
-	accelerator_set_speed,
+	.filter = accelerator_filter_trackpoint,
+	.restart = accelerator_restart,
+	.destroy = accelerator_destroy,
+	.set_speed = accelerator_set_speed,
 };
 
 struct motion_filter *
