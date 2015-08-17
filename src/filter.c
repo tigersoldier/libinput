@@ -64,6 +64,14 @@ filter_dispatch(struct motion_filter *filter,
 	return filter->interface->filter(filter, unaccelerated, data, time);
 }
 
+struct normalized_coords
+filter_dispatch_constant(struct motion_filter *filter,
+			 const struct normalized_coords *unaccelerated,
+			 void *data, uint64_t time)
+{
+	return filter->interface->filter_constant(filter, unaccelerated, data, time);
+}
+
 void
 filter_restart(struct motion_filter *filter,
 	       void *data, uint64_t time)
@@ -317,6 +325,14 @@ accelerator_filter(struct motion_filter *filter,
 	accelerated.y = accel_value * unaccelerated->y;
 
 	return accelerated;
+}
+
+static struct normalized_coords
+accelerator_filter_noop(struct motion_filter *filter,
+			const struct normalized_coords *unaccelerated,
+			void *data, uint64_t time)
+{
+	return *unaccelerated;
 }
 
 static struct normalized_coords
@@ -673,6 +689,7 @@ trackpoint_accel_profile(struct motion_filter *filter,
 
 struct motion_filter_interface accelerator_interface = {
 	.filter = accelerator_filter,
+	.filter_constant = accelerator_filter_noop,
 	.restart = accelerator_restart,
 	.destroy = accelerator_destroy,
 	.set_speed = accelerator_set_speed,
@@ -719,6 +736,7 @@ create_pointer_accelerator_filter_linear(int dpi)
 
 struct motion_filter_interface accelerator_interface_low_dpi = {
 	.filter = accelerator_filter_low_dpi,
+	.filter_constant = accelerator_filter_noop,
 	.restart = accelerator_restart,
 	.destroy = accelerator_destroy,
 	.set_speed = accelerator_set_speed,
@@ -756,6 +774,7 @@ create_pointer_accelerator_filter_touchpad(int dpi)
 
 struct motion_filter_interface accelerator_interface_x230 = {
 	.filter = accelerator_filter_x230,
+	.filter_constant = accelerator_filter_noop,
 	.restart = accelerator_restart,
 	.destroy = accelerator_destroy,
 	.set_speed = accelerator_set_speed,
@@ -793,6 +812,7 @@ create_pointer_accelerator_filter_lenovo_x230(int dpi)
 
 struct motion_filter_interface accelerator_interface_trackpoint = {
 	.filter = accelerator_filter_trackpoint,
+	.filter_constant = accelerator_filter_noop,
 	.restart = accelerator_restart,
 	.destroy = accelerator_destroy,
 	.set_speed = accelerator_set_speed,

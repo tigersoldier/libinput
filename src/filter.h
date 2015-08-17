@@ -34,10 +34,32 @@
 
 struct motion_filter;
 
+/**
+ * Accelerate the given coordinates.
+ * Takes a set of unaccelerated deltas and accelerates them based on the
+ * current and previous motion.
+ *
+ * This is a superset of filter_dispatch_constant()
+ *
+ * @see filter_dispatch_constant
+ */
 struct normalized_coords
 filter_dispatch(struct motion_filter *filter,
 		const struct normalized_coords *unaccelerated,
 		void *data, uint64_t time);
+
+/**
+ * Apply constant motion filters, but no acceleration.
+ *
+ * Takes a set of unaccelerated deltas and applies any constant filters to
+ * it but does not accelerate the delta in the conventional sense.
+ *
+ * @see filter_dispatch
+ */
+struct normalized_coords
+filter_dispatch_constant(struct motion_filter *filter,
+			 const struct normalized_coords *unaccelerated,
+			 void *data, uint64_t time);
 
 void
 filter_restart(struct motion_filter *filter,
