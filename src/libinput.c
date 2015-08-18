@@ -1672,8 +1672,9 @@ libinput_post_event(struct libinput *libinput,
 		events_len *= 2;
 		events = realloc(events, events_len * sizeof *events);
 		if (!events) {
-			fprintf(stderr, "Failed to reallocate event ring "
-				"buffer");
+			log_error(libinput,
+				  "Failed to reallocate event ring buffer. "
+				  "Events may be discarded\n");
 			return;
 		}
 
