@@ -778,9 +778,11 @@ litest_log_handler(struct libinput *libinput,
 	fprintf(stderr, "litest %s: ", priority);
 	vfprintf(stderr, format, args);
 
+#if 0
 	if (strstr(format, "client bug: ") ||
 	    strstr(format, "libinput bug: "))
 		litest_abort_msg("libinput bug triggered, aborting.\n");
+#endif
 }
 
 static int

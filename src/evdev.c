@@ -638,12 +638,45 @@ evdev_notify_axis(struct evdev_device *device,
 			    &discrete);
 }
 
+static inline bool
+evdev_reject_relative(struct evdev_device *device,
+		      const struct input_event *e,
+		      uint64_t time)
+{
+	struct libinput *libinput = device->base.seat->libinput;
+
+	if ((e->code == REL_X || e->code == REL_Y) &&
+	    (device->seat_caps & EVDEV_DEVICE_POINTER) == 0) {
+		switch (ratelimit_test(&device->nonpointer_rel_limit)) {
+		case RATELIMIT_PASS:
+			log_bug_libinput(libinput,
+					 "REL_X/Y from device '%s', but this device is not a pointer\n",
+					 device->devname);
+			break;
+		case RATELIMIT_THRESHOLD:
+			log_bug_libinput(libinput,
+					 "REL_X/Y event flood from '%s'\n",
+					 device->devname);
+			break;
+		case RATELIMIT_EXCEEDED:
+			break;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
 static inline void
 evdev_process_relative(struct evdev_device *device,
 		       struct input_event *e, uint64_t time)
 {
 	struct normalized_coords wheel_degrees = { 0.0, 0.0 };
 	struct discrete_coords discrete = { 0.0, 0.0 };
+
+	if (evdev_reject_relative(device, e, time))
+		return;
 
 	switch (e->code) {
 	case REL_X:
@@ -2157,6 +2190,8 @@ evdev_device_create(struct libinput_seat *seat,
 
 	/* at most 5 SYN_DROPPED log-messages per 30s */
 	ratelimit_init(&device->syn_drop_limit, s2us(30), 5);
+	/* at most 5 log-messages per 5s */
+	ratelimit_init(&device->nonpointer_rel_limit, s2us(5), 5);
 
 	matrix_init_identity(&device->abs.calibration);
 	matrix_init_identity(&device->abs.usermatrix);
