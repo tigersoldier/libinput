@@ -166,6 +166,31 @@ log_msg(struct libinput *libinput,
 	va_end(args);
 }
 
+void
+log_msg_ratelimit(struct libinput *libinput,
+		  struct ratelimit *ratelimit,
+		  enum libinput_log_priority priority,
+		  const char *format, ...)
+{
+	va_list args;
+	enum ratelimit_state state;
+
+	state = ratelimit_test(ratelimit);
+	if (state == RATELIMIT_EXCEEDED)
+		return;
+
+	va_start(args, format);
+	log_msg_va(libinput, priority, format, args);
+	va_end(args);
+
+	if (state == RATELIMIT_THRESHOLD)
+		log_msg(libinput,
+			priority,
+			"WARNING: log rate limit exceeded (%d msgs per %dms). Discarding future messages.\n",
+			ratelimit->burst,
+			us2ms(ratelimit->interval));
+}
+
 LIBINPUT_EXPORT void
 libinput_log_set_priority(struct libinput *libinput,
 			  enum libinput_log_priority priority)

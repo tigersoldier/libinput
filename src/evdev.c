@@ -647,21 +647,10 @@ evdev_reject_relative(struct evdev_device *device,
 
 	if ((e->code == REL_X || e->code == REL_Y) &&
 	    (device->seat_caps & EVDEV_DEVICE_POINTER) == 0) {
-		switch (ratelimit_test(&device->nonpointer_rel_limit)) {
-		case RATELIMIT_PASS:
-			log_bug_libinput(libinput,
-					 "REL_X/Y from device '%s', but this device is not a pointer\n",
-					 device->devname);
-			break;
-		case RATELIMIT_THRESHOLD:
-			log_bug_libinput(libinput,
-					 "REL_X/Y event flood from '%s'\n",
-					 device->devname);
-			break;
-		case RATELIMIT_EXCEEDED:
-			break;
-		}
-
+		log_bug_libinput_ratelimit(libinput,
+					   &device->nonpointer_rel_limit,
+					   "REL_X/Y from device '%s', but this device is not a pointer\n",
+					   device->devname);
 		return true;
 	}
 
@@ -1371,20 +1360,10 @@ evdev_device_dispatch(void *data)
 		rc = libevdev_next_event(device->evdev,
 					 LIBEVDEV_READ_FLAG_NORMAL, &ev);
 		if (rc == LIBEVDEV_READ_STATUS_SYNC) {
-			switch (ratelimit_test(&device->syn_drop_limit)) {
-			case RATELIMIT_PASS:
-				log_info(libinput, "SYN_DROPPED event from "
-					 "\"%s\" - some input events have "
-					 "been lost.\n", device->devname);
-				break;
-			case RATELIMIT_THRESHOLD:
-				log_info(libinput, "SYN_DROPPED flood "
-					 "from \"%s\"\n",
-					 device->devname);
-				break;
-			case RATELIMIT_EXCEEDED:
-				break;
-			}
+			log_info_ratelimit(libinput,
+					   &device->syn_drop_limit,
+					   "SYN_DROPPED event from \"%s\" - some input events have been lost.\n",
+					   device->devname);
 
 			/* send one more sync event so we handle all
 			   currently pending events before we sync up
