@@ -1294,7 +1294,6 @@ litest_auto_assign_value(struct litest_device *d,
 		value = touching ? 0 : 1;
 		break;
 	default:
-		value = -1;
 		if (!axis_replacement_value(axes, ev->code, &value) &&
 		    d->interface->get_axis_default)
 			d->interface->get_axis_default(d, ev->code, &value);
@@ -1344,8 +1343,8 @@ litest_slot_start(struct litest_device *d,
 						     y,
 						     axes,
 						     touching);
-
-		litest_event(d, ev->type, ev->code, value);
+		if (value != LITEST_AUTO_ASSIGN)
+			litest_event(d, ev->type, ev->code, value);
 		ev++;
 	}
 }
@@ -1430,7 +1429,8 @@ litest_slot_move(struct litest_device *d,
 						     y,
 						     axes,
 						     touching);
-		litest_event(d, ev->type, ev->code, value);
+		if (value != LITEST_AUTO_ASSIGN)
+			litest_event(d, ev->type, ev->code, value);
 		ev++;
 	}
 }
