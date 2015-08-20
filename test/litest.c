@@ -44,6 +44,8 @@
 #include <sys/sendfile.h>
 #include <sys/timerfd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <libudev.h>
 
 #include "litest.h"
