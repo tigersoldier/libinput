@@ -130,7 +130,7 @@ located underneath the keyboard, accidental palm touches are a non-issue.
 
 Pressure is usually directly related to contact area. Human fingers flatten
 out as the pressure on the pad increases, resulting in a bigger contact area
-and the firmware then calculates that back into a ressure reading.
+and the firmware then calculates that back into a pressure reading.
 
 libinput uses pressure to detect accidental palm contact and thumbs, though
 pressure data is often device-specific and unreliable.
