@@ -85,4 +85,10 @@ $ sudo evemu-play /dev/input/event4 < scroll.evemu
 If the bug is triggered by replaying on your device, attach the recording to
 the bug report.
 
+@note libinput does not affect the evemu recording. libinput and evemu talk
+directly to the kernel's device nodes. An evemu recording is not influenced
+by the libinput version or whether a libinput context is currently active.
+
+@dotfile evemu.gv
+
 */
