@@ -1917,6 +1917,13 @@ evdev_configure_device(struct evdev_device *device)
 		 udev_tags & EVDEV_UDEV_TAG_ACCELEROMETER ? " Accelerometer" : "",
 		 udev_tags & EVDEV_UDEV_TAG_BUTTONSET ? " Buttonset" : "");
 
+	if (udev_tags & EVDEV_UDEV_TAG_ACCELEROMETER) {
+		log_info(libinput,
+			 "input device '%s', %s is an accelerometer, ignoring\n",
+			 device->devname, devnode);
+		return -1;
+	}
+
 	/* libwacom *adds* TABLET, TOUCHPAD but leaves JOYSTICK in place, so
 	   make sure we only ignore real joystick devices */
 	if ((udev_tags & EVDEV_UDEV_TAG_JOYSTICK) == udev_tags) {

@@ -949,6 +949,34 @@ START_TEST(device_wheel_only)
 }
 END_TEST
 
+START_TEST(device_accelerometer)
+{
+	struct libinput *li;
+	struct libevdev_uinput *uinput;
+	struct libinput_device *device;
+
+	struct input_absinfo absinfo[] = {
+		{ ABS_X, 0, 10, 0, 0, 10 },
+		{ ABS_Y, 0, 10, 0, 0, 10 },
+		{ ABS_Z, 0, 10, 0, 0, 10 },
+		{ -1, -1, -1, -1, -1, -1 }
+	};
+
+	li = litest_create_context();
+	litest_disable_log_handler(li);
+
+	uinput = litest_create_uinput_abs_device("test device", NULL,
+						 absinfo,
+						 -1);
+	device = libinput_path_add_device(li,
+					  libevdev_uinput_get_devnode(uinput));
+	litest_assert_ptr_null(device);
+	libevdev_uinput_destroy(uinput);
+	litest_restore_log_handler(li);
+	libinput_unref(li);
+}
+END_TEST
+
 START_TEST(device_udev_tag_alps)
 {
 	struct litest_device *dev = litest_current_device();
@@ -1222,6 +1250,7 @@ litest_setup_tests(void)
 	litest_add_no_device("device:invalid devices", abs_mt_device_missing_res);
 
 	litest_add("device:wheel", device_wheel_only, LITEST_WHEEL, LITEST_RELATIVE|LITEST_ABSOLUTE);
+	litest_add_no_device("device:accelerometer", device_accelerometer);
 
 	litest_add("device:udev tags", device_udev_tag_alps, LITEST_TOUCHPAD, LITEST_ANY);
 	litest_add("device:udev tags", device_udev_tag_wacom, LITEST_TOUCHPAD, LITEST_ANY);
