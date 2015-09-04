@@ -2084,27 +2084,17 @@ static int
 evdev_set_device_group(struct evdev_device *device,
 		       struct udev_device *udev_device)
 {
+	struct libinput *libinput = device->base.seat->libinput;
 	struct libinput_device_group *group = NULL;
 	const char *udev_group;
 
 	udev_group = udev_device_get_property_value(udev_device,
 						    "LIBINPUT_DEVICE_GROUP");
-	if (udev_group) {
-		struct libinput_device *d;
-
-		list_for_each(d, &device->base.seat->devices_list, link) {
-			const char *identifier = d->group->identifier;
-
-			if (identifier &&
-			    strcmp(identifier, udev_group) == 0) {
-				group = d->group;
-				break;
-			}
-		}
-	}
+	if (udev_group)
+		group = libinput_device_group_find_group(libinput, udev_group);
 
 	if (!group) {
-		group = libinput_device_group_create(udev_group);
+		group = libinput_device_group_create(libinput, udev_group);
 		if (!group)
 			return 1;
 		libinput_device_set_device_group(&device->base, group);

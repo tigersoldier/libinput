@@ -674,6 +674,22 @@ START_TEST(device_context)
 }
 END_TEST
 
+static int open_restricted(const char *path, int flags, void *data)
+{
+	int fd;
+	fd = open(path, flags);
+	return fd < 0 ? -errno : fd;
+}
+static void close_restricted(int fd, void *data)
+{
+	close(fd);
+}
+
+const struct libinput_interface simple_interface = {
+	.open_restricted = open_restricted,
+	.close_restricted = close_restricted,
+};
+
 START_TEST(device_group_get)
 {
 	struct litest_device *dev = litest_current_device();
@@ -719,6 +735,36 @@ START_TEST(device_group_ref)
 	ck_assert(libinput_device_group_unref(group) == NULL);
 
 	libinput_unref(li);
+}
+END_TEST
+
+START_TEST(device_group_leak)
+{
+	struct libinput *li;
+	struct libinput_device *device;
+	struct libevdev_uinput *uinput;
+	struct libinput_device_group *group;
+
+	uinput = litest_create_uinput_device("test device", NULL,
+					     EV_KEY, BTN_LEFT,
+					     EV_KEY, BTN_RIGHT,
+					     EV_REL, REL_X,
+					     EV_REL, REL_Y,
+					     -1);
+
+	li = libinput_path_create_context(&simple_interface, NULL);
+	device = libinput_path_add_device(li,
+					  libevdev_uinput_get_devnode(uinput));
+
+	group = libinput_device_get_device_group(device);
+	libinput_device_group_ref(group);
+
+	libinput_path_remove_device(device);
+
+	libevdev_uinput_destroy(uinput);
+	libinput_unref(li);
+
+	/* the device group leaks, check valgrind */
 }
 END_TEST
 
@@ -1239,6 +1285,7 @@ litest_setup_tests(void)
 
 	litest_add("device:group", device_group_get, LITEST_ANY, LITEST_ANY);
 	litest_add_no_device("device:group", device_group_ref);
+	litest_add_no_device("device:group", device_group_leak);
 
 	litest_add_no_device("device:invalid devices", abs_device_no_absx);
 	litest_add_no_device("device:invalid devices", abs_device_no_absy);
