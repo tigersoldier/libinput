@@ -1449,6 +1449,26 @@ libinput_ref(struct libinput *libinput);
  * destroyed, if the last reference was dereferenced. If so, the context is
  * invalid and may not be interacted with.
  *
+ * @bug When the refcount reaches zero, libinput_unref() releases resources
+ * even if a caller still holds refcounted references to related resources
+ * (e.g. a libinput_device). When libinput_unref() returns
+ * NULL, the caller must consider any resources related to that context
+ * invalid. See https://bugs.freedesktop.org/show_bug.cgi?id=91872.
+ * Example code:
+ * @code
+ * li = libinput_path_create_context(&interface, NULL);
+ * device = libinput_path_add_device(li, "/dev/input/event0");
+ * // get extra reference to device
+ * libinput_device_ref(device);
+ *
+ * // refcount reaches 0, so *all* resources are cleaned up,
+ * // including device
+ * libinput_unref(li);
+ *
+ * // INCORRECT: device has been cleaned up and must not be used
+ * // li = libinput_device_get_context(device);
+ * @endcode
+ *
  * @param libinput A previously initialized libinput context
  * @return NULL if context was destroyed otherwise the passed context
  */
