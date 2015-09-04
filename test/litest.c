@@ -932,13 +932,15 @@ merge_events(const int *orig, const int *override)
 static inline void
 litest_copy_file(const char *dest, const char *src, const char *header)
 {
-	int in, out;
+	int in, out, length;
 
 	out = open(dest, O_CREAT|O_WRONLY, 0644);
 	litest_assert_int_gt(out, -1);
 
-	if (header)
-		write(out, header, strlen(header));
+	if (header) {
+		length = strlen(header);
+		litest_assert_int_eq(write(out, header, length), length);
+	}
 
 	in = open(src, O_RDONLY);
 	litest_assert_int_gt(in, -1);
