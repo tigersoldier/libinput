@@ -299,11 +299,18 @@ evdev_flush_pending_event(struct evdev_device *device, uint64_t time)
 		if (evdev_post_trackpoint_scroll(device, unaccel, time))
 			break;
 
-		/* Apply pointer acceleration. */
-		accel = filter_dispatch(device->pointer.filter,
-					&unaccel,
-					device,
-					time);
+		if (device->pointer.filter) {
+			/* Apply pointer acceleration. */
+			accel = filter_dispatch(device->pointer.filter,
+						&unaccel,
+						device,
+						time);
+		} else {
+			log_bug_libinput(libinput,
+					 "%s: accel filter missing\n",
+					 udev_device_get_devnode(device->udev_device));
+			accel = unaccel;
+		}
 
 		if (normalized_is_zero(accel) && normalized_is_zero(unaccel))
 			break;
