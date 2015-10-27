@@ -289,6 +289,9 @@ evdev_flush_pending_event(struct evdev_device *device, uint64_t time)
 	case EVDEV_NONE:
 		return;
 	case EVDEV_RELATIVE_MOTION:
+		if (!(device->seat_caps & EVDEV_DEVICE_POINTER))
+			break;
+
 		normalize_delta(device, &device->rel, &unaccel);
 		raw.x = device->rel.x;
 		raw.y = device->rel.y;
