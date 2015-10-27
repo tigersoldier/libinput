@@ -297,7 +297,7 @@ evdev_flush_pending_event(struct evdev_device *device, uint64_t time)
 
 		/* Use unaccelerated deltas for pointing stick scroll */
 		if (evdev_post_trackpoint_scroll(device, unaccel, time))
-		    break;
+			break;
 
 		/* Apply pointer acceleration. */
 		accel = filter_dispatch(device->pointer.filter,
