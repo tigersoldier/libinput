@@ -2062,11 +2062,6 @@ evdev_configure_device(struct evdev_device *device)
 		evdev_tag_trackpoint(device, device->udev_device);
 		device->dpi = evdev_read_dpi_prop(device);
 
-		if (libevdev_has_event_code(evdev, EV_REL, REL_X) &&
-		    libevdev_has_event_code(evdev, EV_REL, REL_Y) &&
-		    evdev_init_accel(device, LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE) == -1)
-			return -1;
-
 		device->seat_caps |= EVDEV_DEVICE_POINTER;
 
 		log_info(libinput,
@@ -2102,6 +2097,16 @@ evdev_configure_device(struct evdev_device *device)
 		log_info(libinput,
 			 "input device '%s', %s is a touch device\n",
 			 device->devname, devnode);
+	}
+
+	if (device->seat_caps & EVDEV_DEVICE_POINTER &&
+	    libevdev_has_event_code(evdev, EV_REL, REL_X) &&
+	    libevdev_has_event_code(evdev, EV_REL, REL_Y) &&
+	    evdev_init_accel(device, LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE) == -1) {
+		log_error(libinput,
+			  "failed to initialize pointer acceleration for %s\n",
+			  device->devname);
+		return -1;
 	}
 
 	return 0;
