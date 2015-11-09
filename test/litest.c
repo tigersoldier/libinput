@@ -366,6 +366,7 @@ extern struct litest_test_device litest_nexus4_device;
 extern struct litest_test_device litest_magicpad_device;
 extern struct litest_test_device litest_elantech_touchpad_device;
 extern struct litest_test_device litest_mouse_gladius_device;
+extern struct litest_test_device litest_mouse_wheel_click_angle_device;
 
 struct litest_test_device* devices[] = {
 	&litest_synaptics_clickpad_device,
@@ -398,6 +399,7 @@ struct litest_test_device* devices[] = {
 	&litest_magicpad_device,
 	&litest_elantech_touchpad_device,
 	&litest_mouse_gladius_device,
+	&litest_mouse_wheel_click_angle_device,
 	NULL,
 };
 
