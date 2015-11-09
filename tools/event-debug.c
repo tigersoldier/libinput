@@ -471,6 +471,9 @@ main(int argc, char **argv)
 	struct libinput *li;
 	struct timespec tp;
 
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+	start_time = tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
+
 	tools_init_context(&context);
 
 	if (tools_parse_args(argc, argv, &context))
@@ -479,9 +482,6 @@ main(int argc, char **argv)
 	li = tools_open_backend(&context);
 	if (!li)
 		return 1;
-
-	clock_gettime(CLOCK_MONOTONIC, &tp);
-	start_time = tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
 
 	mainloop(li);
 
