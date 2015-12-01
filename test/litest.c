@@ -1317,9 +1317,9 @@ litest_auto_assign_value(struct litest_device *d,
 }
 
 static void
-send_btntool(struct litest_device *d)
+send_btntool(struct litest_device *d, bool hover)
 {
-	litest_event(d, EV_KEY, BTN_TOUCH, d->ntouches_down != 0);
+	litest_event(d, EV_KEY, BTN_TOUCH, d->ntouches_down != 0 && !hover);
 	litest_event(d, EV_KEY, BTN_TOOL_FINGER, d->ntouches_down == 1);
 	litest_event(d, EV_KEY, BTN_TOOL_DOUBLETAP, d->ntouches_down == 2);
 	litest_event(d, EV_KEY, BTN_TOOL_TRIPLETAP, d->ntouches_down == 3);
@@ -1340,7 +1340,7 @@ litest_slot_start(struct litest_device *d,
 	assert(d->ntouches_down >= 0);
 	d->ntouches_down++;
 
-	send_btntool(d);
+	send_btntool(d, !touching);
 
 	if (d->interface->touch_down) {
 		d->interface->touch_down(d, slot, x, y);
@@ -1395,7 +1395,7 @@ litest_touch_up(struct litest_device *d, unsigned int slot)
 	litest_assert_int_gt(d->ntouches_down, 0);
 	d->ntouches_down--;
 
-	send_btntool(d);
+	send_btntool(d, false);
 
 	if (d->interface->touch_up) {
 		d->interface->touch_up(d, slot);
@@ -1559,7 +1559,7 @@ litest_hover_end(struct litest_device *d, unsigned int slot)
 	litest_assert_int_gt(d->ntouches_down, 0);
 	d->ntouches_down--;
 
-	send_btntool(d);
+	send_btntool(d, true);
 
 	if (d->interface->touch_up) {
 		d->interface->touch_up(d, slot);
