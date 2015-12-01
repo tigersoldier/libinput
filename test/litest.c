@@ -590,6 +590,7 @@ litest_add_tcase(const char *suite_name,
 {
 	struct litest_test_device **dev = devices;
 	struct suite *suite;
+	bool added = false;
 
 	assert(required >= LITEST_DISABLE_DEVICE);
 	assert(excluded >= LITEST_DISABLE_DEVICE);
@@ -607,6 +608,7 @@ litest_add_tcase(const char *suite_name,
 	if (required == LITEST_DISABLE_DEVICE &&
 	    excluded == LITEST_DISABLE_DEVICE) {
 		litest_add_tcase_no_device(suite, func, range);
+		added = true;
 	} else if (required != LITEST_ANY || excluded != LITEST_ANY) {
 		for (; *dev; dev++) {
 			if (filter_device &&
@@ -621,6 +623,7 @@ litest_add_tcase(const char *suite_name,
 						    func,
 						    *dev,
 						    range);
+			added = true;
 		}
 	} else {
 		for (; *dev; dev++) {
@@ -633,7 +636,13 @@ litest_add_tcase(const char *suite_name,
 						    func,
 						    *dev,
 						    range);
+			added = true;
 		}
+	}
+
+	if (!added) {
+		fprintf(stderr, "Test '%s' does not match any devices. Aborting.\n", funcname);
+		abort();
 	}
 }
 
