@@ -3514,7 +3514,7 @@ litest_setup_tests(void)
 	litest_add("touchpad:left-handed", touchpad_left_handed_clickpad_delayed, LITEST_CLICKPAD, LITEST_APPLE_CLICKPAD);
 
 	/* Semi-MT hover tests aren't generic, they only work on this device and
-	 * ignore the semi-mt capability (it doesn't matter for the tests */
+	 * ignore the semi-mt capability (it doesn't matter for the tests) */
 	litest_add_for_device("touchpad:semi-mt-hover", touchpad_semi_mt_hover_noevent, LITEST_SYNAPTICS_HOVER_SEMI_MT);
 	litest_add_for_device("touchpad:semi-mt-hover", touchpad_semi_mt_hover_down, LITEST_SYNAPTICS_HOVER_SEMI_MT);
 	litest_add_for_device("touchpad:semi-mt-hover", touchpad_semi_mt_hover_down_up, LITEST_SYNAPTICS_HOVER_SEMI_MT);
