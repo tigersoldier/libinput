@@ -1703,6 +1703,31 @@ START_TEST(touchpad_semi_mt_hover_2fg_1fg_down)
 }
 END_TEST
 
+START_TEST(touchpad_semi_mt_hover_2fg_up)
+{
+	struct litest_device *dev = litest_current_device();
+	struct libinput *li = dev->libinput;
+
+	litest_touch_down(dev, 0, 70, 50);
+	litest_touch_down(dev, 1, 50, 50);
+
+	litest_push_event_frame(dev);
+	litest_touch_move(dev, 0, 72, 50);
+	litest_touch_move(dev, 1, 52, 50);
+	litest_event(dev, EV_KEY, BTN_TOUCH, 0);
+	litest_pop_event_frame(dev);
+
+	litest_event(dev, EV_ABS, ABS_MT_SLOT, 0);
+	litest_event(dev, EV_ABS, ABS_MT_TRACKING_ID, -1);
+	litest_event(dev, EV_ABS, ABS_MT_SLOT, 1);
+	litest_event(dev, EV_ABS, ABS_MT_TRACKING_ID, -1);
+	litest_event(dev, EV_KEY, BTN_TOOL_DOUBLETAP, 0);
+	litest_event(dev, EV_SYN, SYN_REPORT, 0);
+
+	litest_drain_events(li);
+}
+END_TEST
+
 START_TEST(touchpad_hover_noevent)
 {
 	struct litest_device *dev = litest_current_device();
@@ -3521,6 +3546,7 @@ litest_setup_tests(void)
 	litest_add_for_device("touchpad:semi-mt-hover", touchpad_semi_mt_hover_down_hover_down, LITEST_SYNAPTICS_HOVER_SEMI_MT);
 	litest_add_for_device("touchpad:semi-mt-hover", touchpad_semi_mt_hover_2fg_noevent, LITEST_SYNAPTICS_HOVER_SEMI_MT);
 	litest_add_for_device("touchpad:semi-mt-hover", touchpad_semi_mt_hover_2fg_1fg_down, LITEST_SYNAPTICS_HOVER_SEMI_MT);
+	litest_add_for_device("touchpad:semi-mt-hover", touchpad_semi_mt_hover_2fg_up, LITEST_SYNAPTICS_HOVER_SEMI_MT);
 
 	litest_add("touchpad:hover", touchpad_hover_noevent, LITEST_TOUCHPAD|LITEST_HOVER, LITEST_ANY);
 	litest_add("touchpad:hover", touchpad_hover_down, LITEST_TOUCHPAD|LITEST_HOVER, LITEST_ANY);
