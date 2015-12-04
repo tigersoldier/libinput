@@ -144,6 +144,54 @@ START_TEST(touchpad_2fg_scroll)
 }
 END_TEST
 
+START_TEST(touchpad_2fg_scroll_diagonal)
+{
+	struct litest_device *dev = litest_current_device();
+	struct libinput *li = dev->libinput;
+	struct libinput_event *event;
+	struct libinput_event_pointer *ptrev;
+	int i;
+
+	if (!litest_has_2fg_scroll(dev))
+		return;
+
+	litest_enable_2fg_scroll(dev);
+	litest_drain_events(li);
+
+	litest_touch_down(dev, 0, 45, 30);
+	litest_touch_down(dev, 1, 55, 30);
+
+	litest_touch_move_two_touches(dev, 45, 30, 55, 30, 10, 10, 10, 0);
+	libinput_dispatch(li);
+	litest_wait_for_event_of_type(li,
+				      LIBINPUT_EVENT_POINTER_AXIS,
+				      -1);
+	litest_drain_events(li);
+
+	/* get rid of any touch history still adding x deltas sideways */
+	for (i = 0; i < 5; i++)
+		litest_touch_move(dev, 0, 55, 41 + i);
+	litest_drain_events(li);
+
+	for (i = 6; i < 10; i++) {
+		litest_touch_move(dev, 0, 55, 41 + i);
+		libinput_dispatch(li);
+
+		event = libinput_get_event(li);
+		ptrev = litest_is_axis_event(event,
+				LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL,
+				LIBINPUT_POINTER_AXIS_SOURCE_FINGER);
+		ck_assert(!libinput_event_pointer_has_axis(ptrev,
+				LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL));
+		libinput_event_destroy(event);
+	}
+
+	litest_touch_up(dev, 1);
+	litest_touch_up(dev, 0);
+	libinput_dispatch(li);
+}
+END_TEST
+
 START_TEST(touchpad_2fg_scroll_slow_distance)
 {
 	struct litest_device *dev = litest_current_device();
@@ -3500,6 +3548,7 @@ litest_setup_tests(void)
 	litest_add("touchpad:motion", touchpad_2fg_no_motion, LITEST_TOUCHPAD, LITEST_SINGLE_TOUCH);
 
 	litest_add("touchpad:scroll", touchpad_2fg_scroll, LITEST_TOUCHPAD, LITEST_SINGLE_TOUCH);
+	litest_add("touchpad:scroll", touchpad_2fg_scroll_diagonal, LITEST_TOUCHPAD, LITEST_SINGLE_TOUCH|LITEST_SEMI_MT);
 	litest_add("touchpad:scroll", touchpad_2fg_scroll_slow_distance, LITEST_TOUCHPAD, LITEST_SINGLE_TOUCH);
 	litest_add("touchpad:scroll", touchpad_2fg_scroll_return_to_motion, LITEST_TOUCHPAD, LITEST_SINGLE_TOUCH);
 	litest_add("touchpad:scroll", touchpad_2fg_scroll_source, LITEST_TOUCHPAD, LITEST_SINGLE_TOUCH);

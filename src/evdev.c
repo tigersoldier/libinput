@@ -2548,9 +2548,16 @@ evdev_post_scroll(struct evdev_device *device,
 
 	if (!normalized_is_zero(event)) {
 		const struct discrete_coords zero_discrete = { 0.0, 0.0 };
+		uint32_t axes = device->scroll.direction;
+
+		if (event.y == 0.0)
+			axes &= ~AS_MASK(LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+		if (event.x == 0.0)
+			axes &= ~AS_MASK(LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+
 		evdev_notify_axis(device,
 				  time,
-				  device->scroll.direction,
+				  axes,
 				  source,
 				  &event,
 				  &zero_discrete);
