@@ -2183,6 +2183,81 @@ libinput_device_config_tap_get_default_enabled(struct libinput_device *device);
 /**
  * @ingroup config
  */
+enum libinput_config_tap_and_drag_state {
+	/** Tap-and-drag is to be disabled, or is currently disabled */
+	LIBINPUT_CONFIG_TAP_AND_DRAG_DISABLED,
+	/** Tap-and-drag is to be enabled, or is currently disabled */
+	LIBINPUT_CONFIG_TAP_AND_DRAG_ENABLED,
+};
+
+/**
+ * @ingroup config
+ *
+ * Enable or disable tap-and-drag during tapping on this device. TODO: describe.
+ *
+ * Enabling tap-and-drag on a device that has tapping disabled is permitted,
+ * but has no effect until tapping is enabled.
+ *
+ * @param device The device to configure
+ * @param enable @ref LIBINPUT_CONFIG_TAP_AND_DRAG_ENABLED to enable tap-and-drag
+ * or @ref LIBINPUT_CONFIG_TAP_AND_DRAG_DISABLED to disable tap-and-drag
+ *
+ * @return A config status code. Disabling tap-and-drag on a device that does not
+ * support tapping always succeeds.
+ *
+ * @see libinput_device_config_tap_get_tap_and_drag_enabled
+ * @see libinput_device_config_tap_get_default_tap_and_drag_enabled
+ */
+enum libinput_config_status
+libinput_device_config_tap_set_tap_and_drag_enabled(struct libinput_device *device,
+						 enum libinput_config_tap_and_drag_state enable);
+
+/**
+ * @ingroup config
+ *
+ * Check if tap-and-drag during tapping is enabled on this device. If the
+ * device does not support tapping, this function always returns
+ * @ref LIBINPUT_CONFIG_TAP_AND_DRAG_DISABLED.
+ *
+ * Tap-and-drag may be enabled even when tapping is disabled.
+ *
+ * @param device The device to configure
+ *
+ * @retval LIBINPUT_CONFIG_TAP_AND_DRAG_ENABLED If tap-and-drag is currently enabled
+ * @retval LIBINPUT_CONFIG_TAP_AND_DRAG_DISABLED If tap-and-drag is currently disabled
+ *
+ * @see libinput_device_config_tap_set_tap_and_drag_enabled
+ * @see libinput_device_config_tap_get_default_tap_and_drag_enabled
+ */
+enum libinput_config_tap_and_drag_state
+libinput_device_config_tap_get_tap_and_drag_enabled(struct libinput_device *device);
+
+/**
+ * @ingroup config
+ *
+ * Check if tap-and-drag during tapping is enabled by default on this device.
+ * If the device does not support tapping, this function always returns
+ * @ref LIBINPUT_CONFIG_TAP_AND_DRAG_DISABLED.
+ *
+ * Tap-and-drag may be enabled by default even when tapping is disabled by
+ * default.
+ *
+ * @param device The device to configure
+ *
+ * @retval LIBINPUT_CONFIG_TAP_AND_DRAG_ENABLED If drag lock is enabled by
+ * default
+ * @retval LIBINPUT_CONFIG_TAP_AND_DRAG_DISABLED If drag lock is disabled by
+ * default
+ *
+ * @see libinput_device_config_tap_set_tap_and_drag_enabled
+ * @see libinput_device_config_tap_get_tap_and_drag_enabled
+ */
+enum libinput_config_tap_and_drag_state
+libinput_device_config_tap_get_default_tap_and_drag_enabled(struct libinput_device *device);
+
+/**
+ * @ingroup config
+ */
 enum libinput_config_drag_lock_state {
 	/** Drag lock is to be disabled, or is currently disabled */
 	LIBINPUT_CONFIG_DRAG_LOCK_DISABLED,

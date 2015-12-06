@@ -315,6 +315,7 @@ struct tp_dispatch {
 		uint64_t multitap_last_time;
 
 		bool drag_lock_enabled;
+		bool tap_and_drag_enabled;
 	} tap;
 
 	struct {
