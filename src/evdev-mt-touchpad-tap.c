@@ -419,7 +419,11 @@ tp_tap_dragging_or_doubletap_handle_event(struct tp_dispatch *tp,
 		break;
 	case TAP_EVENT_MOTION:
 	case TAP_EVENT_TIMEOUT:
-		tp->tap.state = TAP_STATE_DRAGGING;
+		if (tp->tap.tap_and_drag_enabled) {
+			tp->tap.state = TAP_STATE_DRAGGING;
+		} else {
+			tp->tap.state = TAP_STATE_HOLD;
+		}
 		break;
 	case TAP_EVENT_BUTTON:
 		tp->tap.state = TAP_STATE_DEAD;
@@ -930,6 +934,44 @@ tp_tap_config_get_default(struct libinput_device *device)
 }
 
 static enum libinput_config_status
+tp_tap_config_set_tap_and_drag_enabled(struct libinput_device *device,
+				       enum libinput_config_tap_and_drag_state enabled)
+{
+	struct evdev_dispatch *dispatch = ((struct evdev_device *) device)->dispatch;
+	struct tp_dispatch *tp = NULL;
+
+	tp = container_of(dispatch, tp, base);
+	tp->tap.tap_and_drag_enabled = enabled;
+
+	return LIBINPUT_CONFIG_STATUS_SUCCESS;
+}
+
+static enum libinput_config_tap_and_drag_state
+tp_tap_config_get_tap_and_drag_enabled(struct libinput_device *device)
+{
+	struct evdev_device *evdev = (struct evdev_device *)device;
+	struct tp_dispatch *tp = NULL;
+
+	tp = container_of(evdev->dispatch, tp, base);
+
+	return tp->tap.tap_and_drag_enabled;
+}
+
+static inline enum libinput_config_tap_and_drag_state
+tp_tap_and_drag_default(struct evdev_device *device)
+{
+	return LIBINPUT_CONFIG_TAP_AND_DRAG_DISABLED;
+}
+
+static enum libinput_config_tap_and_drag_state
+tp_tap_config_get_default_tap_and_drag_enabled(struct libinput_device *device)
+{
+	struct evdev_device *evdev = (struct evdev_device *)device;
+
+	return tp_tap_and_drag_default(evdev);
+}
+
+static enum libinput_config_status
 tp_tap_config_set_draglock_enabled(struct libinput_device *device,
 				   enum libinput_config_drag_lock_state enabled)
 {
@@ -974,6 +1016,9 @@ tp_init_tap(struct tp_dispatch *tp)
 	tp->tap.config.set_enabled = tp_tap_config_set_enabled;
 	tp->tap.config.get_enabled = tp_tap_config_is_enabled;
 	tp->tap.config.get_default = tp_tap_config_get_default;
+	tp->tap.config.set_tap_and_drag_enabled = tp_tap_config_set_tap_and_drag_enabled;
+	tp->tap.config.get_tap_and_drag_enabled = tp_tap_config_get_tap_and_drag_enabled;
+	tp->tap.config.get_default_tap_and_drag_enabled = tp_tap_config_get_default_tap_and_drag_enabled;
 	tp->tap.config.set_draglock_enabled = tp_tap_config_set_draglock_enabled;
 	tp->tap.config.get_draglock_enabled = tp_tap_config_get_draglock_enabled;
 	tp->tap.config.get_default_draglock_enabled = tp_tap_config_get_default_draglock_enabled;
