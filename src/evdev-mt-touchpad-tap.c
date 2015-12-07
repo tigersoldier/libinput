@@ -422,6 +422,7 @@ tp_tap_dragging_or_doubletap_handle_event(struct tp_dispatch *tp,
 		if (tp->tap.tap_and_drag_enabled) {
 			tp->tap.state = TAP_STATE_DRAGGING;
 		} else {
+			tp_tap_notify(tp, time, 1, LIBINPUT_BUTTON_STATE_RELEASED);
 			tp->tap.state = TAP_STATE_HOLD;
 		}
 		break;
