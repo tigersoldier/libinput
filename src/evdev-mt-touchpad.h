@@ -105,6 +105,13 @@ enum tp_tap_state {
 	TAP_STATE_DRAGGING,
 	TAP_STATE_DRAGGING_WAIT,
 	TAP_STATE_DRAGGING_2,
+	TAP_STATE_DRAGGING_3,
+	TAP_STATE_DRAGGING_3_WAIT_0,
+	TAP_STATE_DRAGGING_3_WAIT_1,
+	TAP_STATE_DRAGGING_3_WAIT_2,
+	TAP_STATE_DRAGGING_3_OR_TAP_1,
+	TAP_STATE_DRAGGING_3_OR_TAP_2,
+	TAP_STATE_DRAGGING_3_OR_TAP_3,
 	TAP_STATE_MULTITAP,
 	TAP_STATE_MULTITAP_DOWN,
 	TAP_STATE_DEAD, /**< finger count exceeded */
@@ -315,6 +322,7 @@ struct tp_dispatch {
 		uint64_t multitap_last_time;
 
 		bool drag_lock_enabled;
+		bool three_finger_dragging_enabled;
 	} tap;
 
 	struct {
