@@ -1502,8 +1502,8 @@ litest_touch_move_two_touches(struct litest_device *d,
 		if (sleep_ms) {
 			libinput_dispatch(d->libinput);
 			msleep(sleep_ms);
-			libinput_dispatch(d->libinput);
 		}
+		libinput_dispatch(d->libinput);
 	}
 	litest_touch_move(d, 0, x0 + dx, y0 + dy);
 	litest_touch_move(d, 1, x1 + dx, y1 + dy);
