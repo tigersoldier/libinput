@@ -1027,6 +1027,7 @@ tp_init_tap(struct tp_dispatch *tp)
 
 	tp->tap.state = TAP_STATE_IDLE;
 	tp->tap.enabled = tp_tap_default(tp->device);
+	tp->tap.tap_and_drag_enabled = tp_tap_and_drag_default(tp->device);
 	tp->tap.drag_lock_enabled = tp_drag_lock_default(tp->device);
 
 	libinput_timer_init(&tp->tap.timer,
