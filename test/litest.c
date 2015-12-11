@@ -956,7 +956,7 @@ litest_copy_file(const char *dest, const char *src, const char *header)
 	in = open(src, O_RDONLY);
 	litest_assert_int_gt(in, -1);
 	/* lazy, just check for error and empty file copy */
-	litest_assert_int_gt(sendfile(out, in, NULL, 4096), 0);
+	litest_assert_int_gt(sendfile(out, in, NULL, 40960), 0);
 	close(out);
 	close(in);
 }
