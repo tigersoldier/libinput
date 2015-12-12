@@ -568,8 +568,10 @@ tp_tap_dragging3_handle_event(struct tp_dispatch *tp,
 		}
 		break;
 	case TAP_EVENT_TOUCH:
-		tp_tap_notify(tp, time, 1, LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_DEAD;
+		if (tp->nfingers_down > 3) {
+			tp_tap_notify(tp, time, 1, LIBINPUT_BUTTON_STATE_RELEASED);
+			tp->tap.state = TAP_STATE_DEAD;
+		}
 		break;
 	case TAP_EVENT_MOTION:
 	case TAP_EVENT_TIMEOUT:
