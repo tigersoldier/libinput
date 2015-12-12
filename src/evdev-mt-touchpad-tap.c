@@ -594,6 +594,7 @@ tp_tap_dragging3_wait_handle_event(struct tp_dispatch *tp,
 				   struct tp_touch *t,
 				   enum tap_event event, uint64_t time)
 {
+	struct libinput *libinput = tp_libinput_context(tp);
 	switch (event) {
 	case TAP_EVENT_RELEASE:
 		log_bug_libinput(libinput,
