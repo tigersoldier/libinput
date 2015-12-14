@@ -27,6 +27,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <inttypes.h>
 
 #include "evdev-mt-touchpad.h"
 
@@ -1297,6 +1298,15 @@ tp_want_dwt(struct evdev_device *touchpad,
 
 	/* everything else we don't really know, so we have to assume
 	   they go together */
+	struct tp_dispatch *tp = (struct tp_dispatch*)touchpad->dispatch;
+	log_debug(tp_libinput_context(tp),
+		  "palm: dwt bus_tp: %d, bus_kbd: %d, tp_device_id: %d, kbd_device_id: %d, tp_product_id: %d, kbd_product_id: %d\n",
+		  bus_tp,
+		  bus_kbd,
+		  libevdev_get_id_vendor(touchpad->evdev),
+		  libevdev_get_id_vendor(keyboard->evdev),
+		  libevdev_get_id_product(touchpad->evdev),
+		  libevdev_get_id_product(keyboard->evdev));
 
 	return true;
 }
@@ -1340,6 +1350,11 @@ tp_interface_device_added(struct evdev_device *device,
 		tp->dwt.keyboard_active = false;
 	}
 
+	if (added_device->tags & EVDEV_TAG_KEYBOARD) {
+		log_debug(tp_libinput_context(tp),
+			  "palm: dwt found keyboard %s\n",
+			  added_device->devname);
+	}
 	if (tp->sendevents.current_mode !=
 	    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE)
 		return;
