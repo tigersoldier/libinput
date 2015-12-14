@@ -1285,6 +1285,10 @@ tp_want_dwt(struct evdev_device *touchpad,
 {
 	unsigned int bus_tp = libevdev_get_id_bustype(touchpad->evdev),
 		     bus_kbd = libevdev_get_id_bustype(keyboard->evdev);
+	unsigned int vendor_tp = evdev_device_get_id_vendor(touchpad);
+	unsigned int vendor_kbd = evdev_device_get_id_vendor(keyboard);
+	unsigned int product_tp = evdev_device_get_id_product(touchpad);
+	unsigned int product_kbd = evdev_device_get_id_product(keyboard);
 
 	if (tp_dwt_device_is_blacklisted(touchpad) ||
 	    tp_dwt_device_is_blacklisted(keyboard))
@@ -1294,6 +1298,13 @@ tp_want_dwt(struct evdev_device *touchpad,
 	   other devices */
 	if (bus_tp == BUS_I8042 && bus_kbd != bus_tp)
 		return false;
+
+	/* For Macbook Pro, always use its internal keyboard and touchpad */
+	if (vendor_tp == VENDOR_ID_APPLE
+	    && product_tp == PRODUCT_ID_APPLE_KBD_TOUCHPAD) {
+		return vendor_kbd == VENDOR_ID_APPLE
+		    && product_kbd == PRODUCT_ID_APPLE_KBD_TOUCHPAD;
+	}
 
 	/* everything else we don't really know, so we have to assume
 	   they go together */
