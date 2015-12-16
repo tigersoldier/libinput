@@ -2202,6 +2202,17 @@ evdev_set_device_group(struct evdev_device *device,
 	return 0;
 }
 
+static inline void
+evdev_drain_fd(int fd)
+{
+	struct input_event ev[24];
+	size_t sz = sizeof ev;
+
+	while (read(fd, &ev, sz) == (int)sz) {
+		/* discard all pending events */
+	}
+}
+
 struct evdev_device *
 evdev_device_create(struct libinput_seat *seat,
 		    struct udev_device *udev_device)
@@ -2234,6 +2245,8 @@ evdev_device_create(struct libinput_seat *seat,
 
 	libinput_device_init(&device->base, seat);
 	libinput_seat_ref(seat);
+
+	evdev_drain_fd(fd);
 
 	rc = libevdev_new_from_fd(fd, &device->evdev);
 	if (rc != 0)
@@ -2681,6 +2694,8 @@ evdev_device_resume(struct evdev_device *device)
 		close_restricted(libinput, fd);
 		return -ENODEV;
 	}
+
+	evdev_drain_fd(fd);
 
 	device->fd = fd;
 
