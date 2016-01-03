@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -853,7 +854,8 @@ tp_tap_handle_event(struct tp_dispatch *tp,
 		tp_tap_clear_timer(tp);
 
 	log_debug(libinput,
-		  "tap state: %s → %s → %s\n",
+		  "[%"PRIu64"] tap state: %s → %s → %s\n",
+		  time,
 		  tap_state_to_str(current),
 		  tap_event_to_str(event),
 		  tap_state_to_str(tp->tap.state));
