@@ -109,6 +109,7 @@ tp_gesture_start(struct tp_dispatch *tp, uint64_t time)
 		case GESTURE_STATE_PINCH:
 			gesture_notify_pinch(&tp->device->base, time,
 					    LIBINPUT_EVENT_GESTURE_PINCH_BEGIN,
+					    tp->gesture.finger_count,
 					    &zero, &zero, 1.0, 0.0);
 			break;
 		}
@@ -378,6 +379,7 @@ tp_gesture_twofinger_handle_state_pinch(struct tp_dispatch *tp, uint64_t time)
 	tp_gesture_start(tp, time);
 	gesture_notify_pinch(&tp->device->base, time,
 			     LIBINPUT_EVENT_GESTURE_PINCH_UPDATE,
+			     tp->gesture.finger_count,
 			     &delta, &unaccel, scale, angle_delta);
 
 	tp->gesture.prev_scale = scale;
@@ -496,6 +498,7 @@ tp_gesture_end(struct tp_dispatch *tp, uint64_t time, bool cancelled)
 			break;
 		case GESTURE_STATE_PINCH:
 			gesture_notify_pinch_end(&tp->device->base, time,
+						 tp->gesture.finger_count,
 						 tp->gesture.prev_scale,
 						 cancelled);
 			break;
