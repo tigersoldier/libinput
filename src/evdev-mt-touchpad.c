@@ -140,6 +140,14 @@ tp_get_touch(struct tp_dispatch *tp, unsigned int slot)
 static inline unsigned int
 tp_fake_finger_count(struct tp_dispatch *tp)
 {
+	/* Only one of BTN_TOOL_DOUBLETAP/TRIPLETAP/... may be set at any
+	 * time */
+	if (__builtin_popcount(
+		       tp->fake_touches & ~(FAKE_FINGER_OVERFLOW|0x1)) > 1)
+	    log_bug_kernel(tp->device->base.seat->libinput,
+			   "Invalid fake finger state %#x\n",
+			   tp->fake_touches);
+
 	if (tp->fake_touches & FAKE_FINGER_OVERFLOW)
 		return FAKE_FINGER_OVERFLOW;
 	else /* don't count BTN_TOUCH */
