@@ -148,7 +148,7 @@ tp_gesture_post_pointer_motion(struct tp_dispatch *tp, uint64_t time)
 }
 
 static unsigned int
-tp_gesture_get_active_touches(struct tp_dispatch *tp,
+tp_gesture_get_active_touches(const struct tp_dispatch *tp,
 			      struct tp_touch **touches,
 			      unsigned int count)
 {

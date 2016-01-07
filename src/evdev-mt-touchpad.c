@@ -510,7 +510,7 @@ tp_pin_fingers(struct tp_dispatch *tp)
 }
 
 int
-tp_touch_active(struct tp_dispatch *tp, struct tp_touch *t)
+tp_touch_active(const struct tp_dispatch *tp, const struct tp_touch *t)
 {
 	return (t->state == TOUCH_BEGIN || t->state == TOUCH_UPDATE) &&
 		t->palm.state == PALM_NONE &&
@@ -521,7 +521,7 @@ tp_touch_active(struct tp_dispatch *tp, struct tp_touch *t)
 }
 
 bool
-tp_palm_tap_is_palm(struct tp_dispatch *tp, struct tp_touch *t)
+tp_palm_tap_is_palm(const struct tp_dispatch *tp, const struct tp_touch *t)
 {
 	if (t->state != TOUCH_BEGIN)
 		return false;
