@@ -110,7 +110,6 @@ START_TEST(gestures_swipe_3fg)
 
 		dx = libinput_event_gesture_get_dx(gevent);
 		dy = libinput_event_gesture_get_dy(gevent);
-		debug_trace("delta: %.2f/%.2f\n", dx, dy);
 		if (dir_x == 0.0)
 			ck_assert(dx == 0.0);
 		else if (dir_x < 0.0)
