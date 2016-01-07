@@ -135,6 +135,7 @@ enum tp_gesture_state {
 	GESTURE_STATE_UNKNOWN,
 	GESTURE_STATE_SCROLL,
 	GESTURE_STATE_PINCH,
+	GESTURE_STATE_SWIPE,
 };
 
 enum tp_thumb_state {

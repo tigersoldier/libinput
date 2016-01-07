@@ -88,4 +88,20 @@ thus suggesting a window movement. libinput only has knowledge of the finger
 coordinates (and even then only in device coordinates, not in screen
 coordinates) and thus cannot differentiate the two.
 
+@section gestures_softbuttons Gestures with enabled software buttons
+
+If the touchpad device is a @ref touchpads_buttons_clickpads "Clickpad", it
+is recommended that a caller switches to @ref clickfinger.
+Usually fingers placed in a @ref software_buttons "software button area" is not
+considered for gestures, resulting in some gestures to be interpreted as
+pointer motion or two-finger scroll events.
+
+@image html pinch-gestures-softbuttons.svg "Interference of software buttons and pinch gestures"
+
+In the example above, the software button area is highlighted in red. The
+user executes a three-finger pinch gesture, with the thumb remaining in the
+software button area. libinput ignores fingers within the software button
+areas, the movement of the remaining fingers is thus interpreted as a
+two-finger scroll motion.
+
 */
