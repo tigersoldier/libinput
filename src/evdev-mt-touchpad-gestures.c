@@ -263,6 +263,22 @@ tp_gesture_twofinger_handle_state_none(struct tp_dispatch *tp, uint64_t time)
 	return GESTURE_2FG_STATE_UNKNOWN;
 }
 
+static inline int
+tp_gesture_same_directions(int dir1, int dir2)
+{
+	/*
+	 * In some cases (semi-mt touchpads) we may seen one finger move
+	 * e.g. N/NE and the other W/NW so we not only check for overlapping
+	 * directions, but also for neighboring bits being set.
+	 * The ((dira & 0x80) && (dirb & 0x01)) checks are to check for bit 0
+	 * and 7 being set as they also represent neighboring directions.
+	 */
+	return ((dir1 | (dir1 >> 1)) & dir2) ||
+		((dir2 | (dir2 >> 1)) & dir1) ||
+		((dir1 & 0x80) && (dir2 & 0x01)) ||
+		((dir2 & 0x80) && (dir1 & 0x01));
+}
+
 static enum tp_gesture_2fg_state
 tp_gesture_twofinger_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 {
@@ -282,19 +298,8 @@ tp_gesture_twofinger_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 	if (dir1 == UNDEFINED_DIRECTION || dir2 == UNDEFINED_DIRECTION)
 		return GESTURE_2FG_STATE_UNKNOWN;
 
-	/*
-	 * If both touches are moving in the same direction assume scroll.
-	 *
-	 * In some cases (semi-mt touchpads) We may seen one finger move
-	 * e.g. N/NE and the other W/NW so we not only check for overlapping
-	 * directions, but also for neighboring bits being set.
-	 * The ((dira & 0x80) && (dirb & 0x01)) checks are to check for bit 0
-	 * and 7 being set as they also represent neighboring directions.
-	 */
-	if (((dir1 | (dir1 >> 1)) & dir2) ||
-	    ((dir2 | (dir2 >> 1)) & dir1) ||
-	    ((dir1 & 0x80) && (dir2 & 0x01)) ||
-	    ((dir2 & 0x80) && (dir1 & 0x01))) {
+	/* If both touches are moving in the same direction assume scroll */
+	if (tp_gesture_same_directions(dir1, dir2)) {
 		tp_gesture_set_scroll_buildup(tp);
 		return GESTURE_2FG_STATE_SCROLL;
 	} else if (tp->gesture.enabled) {
