@@ -33,13 +33,13 @@
 #define DEFAULT_GESTURE_2FG_SCROLL_TIMEOUT ms2us(500)
 
 static inline const char*
-gesture_state_to_str(enum tp_gesture_2fg_state state)
+gesture_state_to_str(enum tp_gesture_state state)
 {
 	switch (state) {
-	CASE_RETURN_STRING(GESTURE_2FG_STATE_NONE);
-	CASE_RETURN_STRING(GESTURE_2FG_STATE_UNKNOWN);
-	CASE_RETURN_STRING(GESTURE_2FG_STATE_SCROLL);
-	CASE_RETURN_STRING(GESTURE_2FG_STATE_PINCH);
+	CASE_RETURN_STRING(GESTURE_STATE_NONE);
+	CASE_RETURN_STRING(GESTURE_STATE_UNKNOWN);
+	CASE_RETURN_STRING(GESTURE_STATE_SCROLL);
+	CASE_RETURN_STRING(GESTURE_STATE_PINCH);
 	}
 	return NULL;
 }
@@ -96,17 +96,17 @@ tp_gesture_start(struct tp_dispatch *tp, uint64_t time)
 
 	switch (tp->gesture.finger_count) {
 	case 2:
-		switch (tp->gesture.twofinger_state) {
-		case GESTURE_2FG_STATE_NONE:
-		case GESTURE_2FG_STATE_UNKNOWN:
+		switch (tp->gesture.state) {
+		case GESTURE_STATE_NONE:
+		case GESTURE_STATE_UNKNOWN:
 			log_bug_libinput(libinput,
 					 "%s in unknown gesture mode\n",
 					 __func__);
 			break;
-		case GESTURE_2FG_STATE_SCROLL:
+		case GESTURE_STATE_SCROLL:
 			/* NOP */
 			break;
-		case GESTURE_2FG_STATE_PINCH:
+		case GESTURE_STATE_PINCH:
 			gesture_notify_pinch(&tp->device->base, time,
 					    LIBINPUT_EVENT_GESTURE_PINCH_BEGIN,
 					    &zero, &zero, 1.0, 0.0);
@@ -245,13 +245,13 @@ tp_gesture_set_scroll_buildup(struct tp_dispatch *tp)
 	tp->device->scroll.buildup = tp_normalize_delta(tp, average);
 }
 
-static enum tp_gesture_2fg_state
+static enum tp_gesture_state
 tp_gesture_twofinger_handle_state_none(struct tp_dispatch *tp, uint64_t time)
 {
 	struct tp_touch *first, *second;
 
 	if (tp_gesture_get_active_touches(tp, tp->gesture.touches, 2) != 2)
-		return GESTURE_2FG_STATE_NONE;
+		return GESTURE_STATE_NONE;
 
 	first = tp->gesture.touches[0];
 	second = tp->gesture.touches[1];
@@ -260,7 +260,7 @@ tp_gesture_twofinger_handle_state_none(struct tp_dispatch *tp, uint64_t time)
 	first->gesture.initial = first->point;
 	second->gesture.initial = second->point;
 
-	return GESTURE_2FG_STATE_UNKNOWN;
+	return GESTURE_STATE_UNKNOWN;
 }
 
 static inline int
@@ -279,7 +279,7 @@ tp_gesture_same_directions(int dir1, int dir2)
 		((dir2 & 0x80) && (dir1 & 0x01));
 }
 
-static enum tp_gesture_2fg_state
+static enum tp_gesture_state
 tp_gesture_twofinger_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 {
 	struct tp_touch *first = tp->gesture.touches[0],
@@ -289,44 +289,44 @@ tp_gesture_twofinger_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 	/* if fingers stay unmoving for a while, assume (slow) scroll */
 	if (time > (tp->gesture.initial_time + DEFAULT_GESTURE_2FG_SCROLL_TIMEOUT)) {
 		tp_gesture_set_scroll_buildup(tp);
-		return GESTURE_2FG_STATE_SCROLL;
+		return GESTURE_STATE_SCROLL;
 	}
 
 	/* Else wait for both fingers to have moved */
 	dir1 = tp_gesture_get_direction(tp, first);
 	dir2 = tp_gesture_get_direction(tp, second);
 	if (dir1 == UNDEFINED_DIRECTION || dir2 == UNDEFINED_DIRECTION)
-		return GESTURE_2FG_STATE_UNKNOWN;
+		return GESTURE_STATE_UNKNOWN;
 
 	/* If both touches are moving in the same direction assume scroll */
 	if (tp_gesture_same_directions(dir1, dir2)) {
 		tp_gesture_set_scroll_buildup(tp);
-		return GESTURE_2FG_STATE_SCROLL;
+		return GESTURE_STATE_SCROLL;
 	} else if (tp->gesture.enabled) {
 		tp_gesture_get_pinch_info(tp,
 					  &tp->gesture.initial_distance,
 					  &tp->gesture.angle,
 					  &tp->gesture.center);
 		tp->gesture.prev_scale = 1.0;
-		return GESTURE_2FG_STATE_PINCH;
+		return GESTURE_STATE_PINCH;
 	}
 
-	return GESTURE_2FG_STATE_UNKNOWN;
+	return GESTURE_STATE_UNKNOWN;
 }
 
-static enum tp_gesture_2fg_state
+static enum tp_gesture_state
 tp_gesture_twofinger_handle_state_scroll(struct tp_dispatch *tp, uint64_t time)
 {
 	struct normalized_coords delta;
 
 	if (tp->scroll.method != LIBINPUT_CONFIG_SCROLL_2FG)
-		return GESTURE_2FG_STATE_SCROLL;
+		return GESTURE_STATE_SCROLL;
 
 	/* On some semi-mt models slot 0 is more accurate, so for semi-mt
 	 * we only use slot 0. */
 	if (tp->semi_mt) {
 		if (!tp->touches[0].dirty)
-			return GESTURE_2FG_STATE_SCROLL;
+			return GESTURE_STATE_SCROLL;
 
 		delta = tp_get_delta(&tp->touches[0]);
 	} else {
@@ -337,7 +337,7 @@ tp_gesture_twofinger_handle_state_scroll(struct tp_dispatch *tp, uint64_t time)
 	delta = tp_filter_motion_unaccelerated(tp, &delta, time);
 
 	if (normalized_is_zero(delta))
-		return GESTURE_2FG_STATE_SCROLL;
+		return GESTURE_STATE_SCROLL;
 
 	tp_gesture_start(tp, time);
 	evdev_post_scroll(tp->device,
@@ -345,10 +345,10 @@ tp_gesture_twofinger_handle_state_scroll(struct tp_dispatch *tp, uint64_t time)
 			  LIBINPUT_POINTER_AXIS_SOURCE_FINGER,
 			  &delta);
 
-	return GESTURE_2FG_STATE_SCROLL;
+	return GESTURE_STATE_SCROLL;
 }
 
-static enum tp_gesture_2fg_state
+static enum tp_gesture_state
 tp_gesture_twofinger_handle_state_pinch(struct tp_dispatch *tp, uint64_t time)
 {
 	double angle, angle_delta, distance, scale;
@@ -373,7 +373,7 @@ tp_gesture_twofinger_handle_state_pinch(struct tp_dispatch *tp, uint64_t time)
 
 	if (normalized_is_zero(delta) && normalized_is_zero(unaccel) &&
 	    scale == tp->gesture.prev_scale && angle_delta == 0.0)
-		return GESTURE_2FG_STATE_PINCH;
+		return GESTURE_STATE_PINCH;
 
 	tp_gesture_start(tp, time);
 	gesture_notify_pinch(&tp->device->base, time,
@@ -382,34 +382,34 @@ tp_gesture_twofinger_handle_state_pinch(struct tp_dispatch *tp, uint64_t time)
 
 	tp->gesture.prev_scale = scale;
 
-	return GESTURE_2FG_STATE_PINCH;
+	return GESTURE_STATE_PINCH;
 }
 
 static void
 tp_gesture_post_twofinger(struct tp_dispatch *tp, uint64_t time)
 {
-	enum tp_gesture_2fg_state oldstate = tp->gesture.twofinger_state;
+	enum tp_gesture_state oldstate = tp->gesture.state;
 
-	if (tp->gesture.twofinger_state == GESTURE_2FG_STATE_NONE)
-		tp->gesture.twofinger_state =
+	if (tp->gesture.state == GESTURE_STATE_NONE)
+		tp->gesture.state =
 			tp_gesture_twofinger_handle_state_none(tp, time);
 
-	if (tp->gesture.twofinger_state == GESTURE_2FG_STATE_UNKNOWN)
-		tp->gesture.twofinger_state =
+	if (tp->gesture.state == GESTURE_STATE_UNKNOWN)
+		tp->gesture.state =
 			tp_gesture_twofinger_handle_state_unknown(tp, time);
 
-	if (tp->gesture.twofinger_state == GESTURE_2FG_STATE_SCROLL)
-		tp->gesture.twofinger_state =
+	if (tp->gesture.state == GESTURE_STATE_SCROLL)
+		tp->gesture.state =
 			tp_gesture_twofinger_handle_state_scroll(tp, time);
 
-	if (tp->gesture.twofinger_state == GESTURE_2FG_STATE_PINCH)
-		tp->gesture.twofinger_state =
+	if (tp->gesture.state == GESTURE_STATE_PINCH)
+		tp->gesture.state =
 			tp_gesture_twofinger_handle_state_pinch(tp, time);
 
 	log_debug(tp_libinput_context(tp),
 		  "gesture state: %s → %s\n",
 		  gesture_state_to_str(oldstate),
-		  gesture_state_to_str(tp->gesture.twofinger_state));
+		  gesture_state_to_str(tp->gesture.state));
 }
 
 static void
@@ -475,26 +475,26 @@ static void
 tp_gesture_end(struct tp_dispatch *tp, uint64_t time, bool cancelled)
 {
 	struct libinput *libinput = tp->device->base.seat->libinput;
-	enum tp_gesture_2fg_state twofinger_state = tp->gesture.twofinger_state;
+	enum tp_gesture_state state = tp->gesture.state;
 
-	tp->gesture.twofinger_state = GESTURE_2FG_STATE_NONE;
+	tp->gesture.state = GESTURE_STATE_NONE;
 
 	if (!tp->gesture.started)
 		return;
 
 	switch (tp->gesture.finger_count) {
 	case 2:
-		switch (twofinger_state) {
-		case GESTURE_2FG_STATE_NONE:
-		case GESTURE_2FG_STATE_UNKNOWN:
+		switch (state) {
+		case GESTURE_STATE_NONE:
+		case GESTURE_STATE_UNKNOWN:
 			log_bug_libinput(libinput,
 					 "%s in unknown gesture mode\n",
 					 __func__);
 			break;
-		case GESTURE_2FG_STATE_SCROLL:
+		case GESTURE_STATE_SCROLL:
 			tp_gesture_stop_twofinger_scroll(tp, time);
 			break;
-		case GESTURE_2FG_STATE_PINCH:
+		case GESTURE_STATE_PINCH:
 			gesture_notify_pinch_end(&tp->device->base, time,
 						 tp->gesture.prev_scale,
 						 cancelled);
@@ -578,7 +578,7 @@ tp_init_gesture(struct tp_dispatch *tp)
 	else
 		tp->gesture.enabled = true;
 
-	tp->gesture.twofinger_state = GESTURE_2FG_STATE_NONE;
+	tp->gesture.state = GESTURE_STATE_NONE;
 
 	libinput_timer_init(&tp->gesture.finger_count_switch_timer,
 			    tp->device->base.seat->libinput,
