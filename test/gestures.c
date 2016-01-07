@@ -375,8 +375,7 @@ START_TEST(gestures_time_usec)
 					0, 30,
 					4, 2);
 
-	litest_wait_for_event(li);
-
+	libinput_dispatch(li);
 	event = libinput_get_event(li);
 	gevent = litest_is_gesture_event(event,
 					 LIBINPUT_EVENT_GESTURE_SWIPE_BEGIN,
