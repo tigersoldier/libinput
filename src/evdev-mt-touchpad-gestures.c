@@ -312,12 +312,24 @@ tp_gesture_same_directions(int dir1, int dir2)
 		((dir2 & 0x80) && (dir1 & 0x01));
 }
 
+static inline void
+tp_gesture_init_pinch( struct tp_dispatch *tp)
+{
+	tp_gesture_get_pinch_info(tp,
+				  &tp->gesture.initial_distance,
+				  &tp->gesture.angle,
+				  &tp->gesture.center);
+	tp->gesture.prev_scale = 1.0;
+}
+
 static enum tp_gesture_state
 tp_gesture_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 {
 	struct tp_touch *first = tp->gesture.touches[0],
 			*second = tp->gesture.touches[1];
 	int dir1, dir2;
+	int yres = tp->device->abs.absinfo_y->resolution;
+	int vert_distance;
 
 	/* for two-finger gestures, if the fingers stay unmoving for a
 	 * while, assume (slow) scroll */
@@ -325,6 +337,14 @@ tp_gesture_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 	    time > (tp->gesture.initial_time + DEFAULT_GESTURE_2FG_SCROLL_TIMEOUT)) {
 		tp_gesture_set_scroll_buildup(tp);
 		return GESTURE_STATE_SCROLL;
+	}
+
+	/* Else check if one finger is > 20mm below the others */
+	vert_distance = abs(first->point.y - second->point.y);
+	if (vert_distance > 20 * yres &&
+	    tp->gesture.enabled) {
+		tp_gesture_init_pinch(tp);
+		return GESTURE_STATE_PINCH;
 	}
 
 	/* Else wait for both fingers to have moved */
@@ -343,11 +363,7 @@ tp_gesture_handle_state_unknown(struct tp_dispatch *tp, uint64_t time)
 			return GESTURE_STATE_SWIPE;
 		}
 	} else if (tp->gesture.enabled) {
-		tp_gesture_get_pinch_info(tp,
-					  &tp->gesture.initial_distance,
-					  &tp->gesture.angle,
-					  &tp->gesture.center);
-		tp->gesture.prev_scale = 1.0;
+		tp_gesture_init_pinch(tp);
 		return GESTURE_STATE_PINCH;
 	}
 
