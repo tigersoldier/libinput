@@ -82,13 +82,13 @@ START_TEST(gestures_swipe_3fg)
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 40, 40);
-	litest_touch_down(dev, 1, 40, 50);
-	litest_touch_down(dev, 2, 40, 60);
+	litest_touch_down(dev, 1, 50, 40);
+	litest_touch_down(dev, 2, 60, 40);
 	libinput_dispatch(li);
 	litest_touch_move_three_touches(dev,
 					40, 40,
-					40, 50,
-					40, 60,
+					50, 40,
+					60, 40,
 					dir_x, dir_y,
 					10, 2);
 	libinput_dispatch(li);
@@ -369,13 +369,13 @@ START_TEST(gestures_time_usec)
 	litest_drain_events(li);
 
 	litest_touch_down(dev, 0, 40, 40);
-	litest_touch_down(dev, 1, 40, 50);
-	litest_touch_down(dev, 2, 40, 60);
+	litest_touch_down(dev, 1, 50, 40);
+	litest_touch_down(dev, 2, 60, 40);
 	libinput_dispatch(li);
 	litest_touch_move_three_touches(dev,
 					40, 40,
-					40, 50,
-					40, 60,
+					50, 40,
+					60, 40,
 					0, 30,
 					4, 2);
 
