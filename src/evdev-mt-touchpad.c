@@ -1780,8 +1780,7 @@ tp_init_palmdetect(struct tp_dispatch *tp,
 	width = device->abs.dimensions.x;
 	height = device->abs.dimensions.y;
 
-	/* Wacom doesn't have internal touchpads,
-	 * Apple touchpads are always big enough to warrant palm detection */
+	/* Wacom doesn't have internal touchpads */
 	if (device->model_flags & EVDEV_MODEL_WACOM_TOUCHPAD)
 		return 0;
 
