@@ -227,7 +227,6 @@ struct tp_dispatch {
 	bool has_mt;
 	bool semi_mt;
 	bool reports_distance;			/* does the device support true hovering */
-	enum touchpad_model model;
 
 	unsigned int num_slots;			/* number of slots */
 	unsigned int ntouches;			/* no slots inc. fakes */
