@@ -1662,6 +1662,7 @@ evdev_read_model_flags(struct evdev_device *device)
 		{ "LIBINPUT_MODEL_SYNAPTICS_SERIAL_TOUCHPAD", EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD },
 		{ "LIBINPUT_MODEL_JUMPING_SEMI_MT", EVDEV_MODEL_JUMPING_SEMI_MT },
 		{ "LIBINPUT_MODEL_ELANTECH_TOUCHPAD", EVDEV_MODEL_ELANTECH_TOUCHPAD },
+		{ "LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD", EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD },
 		{ NULL, EVDEV_MODEL_DEFAULT },
 	};
 	const struct model_map *m = model_map;
@@ -1868,7 +1869,8 @@ evdev_reject_device(struct evdev_device *device)
 	    libevdev_has_event_code(evdev, EV_REL, REL_Y))
 		return -1;
 
-	if (libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_X) ^
+	if (!evdev_is_fake_mt_device(device) &&
+	    libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_X) ^
 	    libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_Y))
 		return -1;
 

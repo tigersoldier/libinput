@@ -1218,7 +1218,7 @@ tp_tap_resume(struct tp_dispatch *tp, uint64_t time)
 }
 
 bool
-tp_tap_dragging(struct tp_dispatch *tp)
+tp_tap_dragging(const struct tp_dispatch *tp)
 {
 	switch (tp->tap.state) {
 	case TAP_STATE_DRAGGING:
